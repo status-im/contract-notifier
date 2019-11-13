@@ -1,11 +1,16 @@
-const secret = require('./.secret.json');
+let secret = {};
+try {
+  secret = require("./.secret.json");
+} catch (err) {
+  console.log("WARN: .secret.json file not available");
+}
 
-const env = process.env
+const env = process.env;
 
 /* some defaults cannot be known in advance */
 const config = {
   /* Hosting */
-  PORT : env.PORT || 4000,
+  PORT: env.PORT || 4000,
   RATE_LIMIT_TIME: env.RATE_LIMIT_TIME || 15,
   RATE_LIMIT_MAX_REQ: env.RATE_LIMIT_MAX_REQ || 1,
   /* Database */
@@ -14,6 +19,6 @@ const config = {
   BLOCKCHAIN_CONNECTION_POINT: env.BLOCKCHAIN_CONNECTION_POINT || secret.BLOCKCHAIN_CONNECTION_POINT || "http://localhost:8545",
   /* Email */
   SENDGRID_API_KEY: secret.SENDGRID_API_KEY
-}
+};
 
 module.exports = config;
