@@ -25,6 +25,7 @@ module.exports = {
             },
             index: "seller",
             template: {
+              subject: "New trade!",
               html: "escrow-creation-seller.html",
               text: "escrow-creation-seller.txt"
             }
@@ -42,6 +43,7 @@ module.exports = {
             },
             index: "buyer",
             template: {
+              subject: "New trade!",
               html: "escrow-creation-buyer.html",
               text: "escrow-creation-buyer.txt"
             }

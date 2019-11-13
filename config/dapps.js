@@ -1,5 +1,5 @@
 const path = require("path");
-
+const fs = require("fs");
 class DAppConfig {
   constructor(){
     this.configurations = {};
@@ -48,6 +48,15 @@ class DAppConfig {
   template(dappId, contract, eventName) {
     const dappConfig = this.config(dappId);
     return Object.values(dappConfig.templates.contracts[contract].events).filter(x => x.ABI.name === eventName && x.ABI.type === 'event');
+  }
+
+  getEmailTemplate(dappId, t){
+    // TODO: avoid reading this on each user/email
+    const templatePath = path.join("./dapps", dappId);
+    const subject = t.template.subject;
+    const text = fs.readFileSync(path.join(templatePath, t.template.text)).toString();
+    const html = fs.readFileSync(path.join(templatePath, t.template.html)).toString();
+    return {text, html, subject};
   }
 
 }
