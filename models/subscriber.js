@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
-const subscriberStatus = require('./subscriberStatus');
+const subscriberStatus = require("./subscriber-status");
 const Schema = mongoose.Schema;
-
-
 
 const validator = require("validator");
 
@@ -43,8 +41,13 @@ const SubscriberSchema = new Schema({
   status: {
     type: String,
     default: subscriberStatus.UNCONFIRMED,
-    enum: subscriberStatus.ALL
+    enum: Object.values(subscriberStatus)
   }
 });
+
+
+SubscriberSchema.statics.findActiveUsersByDapp = function(dappId) {
+  return this.find({ dappId, status: subscriberStatus.CONFIRMED });
+};
 
 module.exports = mongoose.model("Subscribers", SubscriberSchema);
