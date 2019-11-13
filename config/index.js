@@ -9,7 +9,7 @@ const env = process.env;
 
 /* some defaults cannot be known in advance */
 const config = {
-  /* Hosting */
+  /* Api */
   PORT: env.PORT || 4000,
   RATE_LIMIT_TIME: env.RATE_LIMIT_TIME || 15,
   RATE_LIMIT_MAX_REQ: env.RATE_LIMIT_MAX_REQ || 1,
@@ -18,7 +18,11 @@ const config = {
   /* Blockchain */
   BLOCKCHAIN_CONNECTION_POINT: env.BLOCKCHAIN_CONNECTION_POINT || secret.BLOCKCHAIN_CONNECTION_POINT || "http://localhost:8545",
   /* Email */
-  SENDGRID_API_KEY: secret.SENDGRID_API_KEY
+  SENDGRID_API_KEY: secret.SENDGRID_API_KEY,
+  /* WATCHER */
+  BLOCK_DELAY: 12, // 15-170 secs
+  EVENTS_RANGE: 30,
+  POLL_SLEEP: 1 // seconds
 };
 
 module.exports = config;

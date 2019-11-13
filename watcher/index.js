@@ -2,10 +2,11 @@ const Events = require("events");
 const config = require("../config");
 const Database = require("../database");
 const Ethereum = require("./ethereum");
+const { addressCompare } = require("./utils");
 const events = new Events();
 const Mailer = require("../mail/sendgrid");
 const DappConfig = require("../config/dapps");
-
+const Subscribers = require("../models/subscriber");
 const dapps = new DappConfig();
 const mailer = new Mailer(config);
 const db = new Database(events, config);
@@ -22,15 +23,21 @@ events.on("db:connected", () => {
     dapps.getDapps().forEach(dappId => {
       const contracts = dapps.contracts(dappId);
       contracts.forEach(address => {
-        eth.scan(address, dapps.ABI(dappId, address), blockNum);
+        eth.scan(dappId, address, dapps.ABI(dappId, address), blockNum);
       });
     });
   });
 });
 
-events.on("web3:event", event => {
-  // TODO: process each event. See if the return values matches the indexed address field, and send email
-  console.log(event);
+events.on("web3:event", ({ dappId, address, event, returnValues }) => {
+  dapps.template(dappId, address, event).forEach(async template => {
+    const users = await Subscribers.findActiveUsersByDapp(dappId);
+    users.forEach(user => {
+      if (addressCompare(returnValues[template.index], user.address)) {
+        console.log("//TODO: Send email!");
+      }
+    });
+  });
 });
 
 // TODO: handle errors sending email

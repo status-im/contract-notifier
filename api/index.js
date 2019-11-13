@@ -10,10 +10,9 @@ const config = require("../config");
 const Database = require("../database");
 const events = new Events();
 const Subscriber = require("../models/subscriber");
-const subscriberStatus = require("../models/subscriberStatus");
+const subscriberStatus = require("../models/subscriber-status");
 const Mailer = require('../mail/sendgrid');
 const DappConfig = require('../config/dapps');
-
 
 const dapps = new DappConfig();
 const mailer = new Mailer(config);
