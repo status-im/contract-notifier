@@ -28,12 +28,12 @@ class Ethereum {
 
   async poll(fn) {
     await fn();
-    await this.sleep(1 * 1000); // TODO: extract to config
+    await this.sleep(this.config.POLL_SLEEP * 1000);
     await this.poll(fn);
   }
 
-  async getEvents(contractInstance, fromBlock, toBlock) {
-    console.log("Queriying ", fromBlock, toBlock);
+  async getEvents(dappId, contractInstance, fromBlock, toBlock) {
+    console.log("Querying ", fromBlock, toBlock);
 
     const eventNames = contractInstance.options.jsonInterface
       .filter(x => x.type === "event")
@@ -46,7 +46,10 @@ class Ethereum {
           toBlock: toBlock
         });
 
-        events.forEach(ev => this.events.emit("web3:event", ev));
+        events.forEach(ev => {
+          ev.dappId = dappId;
+          this.events.emit("web3:event", ev);
+        });
       })
     );
   }
@@ -58,31 +61,26 @@ class Ethereum {
     return this.contracts[address];
   }
 
-  async scan(address, ABI, startBlockNumber = 0) {
-    const MaxBlockRange = 30; // TODO: extract to config
-
-    let lastBlockProcessed =
-      startBlockNumber || (await this.web3.eth.getBlockNumber()); // TODO: allow user to specify starting block
-    let latestEthBlock;
+  async scan(dappId, address, ABI, startBlockNumber = 0) {
+    let lastBlock = await this.web3.eth.getBlockNumber();
+    let lastBlockProcessed = startBlockNumber || lastBlock;
 
     await this.poll(async () => {
       try {
-        latestEthBlock = (await this.web3.eth.getBlockNumber()) - 20; // 20 blocks of delay to avoid reorgs. TODO: extract to config
+        lastBlock = (await this.web3.eth.getBlockNumber()) - this.config.BLOCK_DELAY; // To avoid losing events due to reorgs. 20 = 
 
-        if (lastBlockProcessed + MaxBlockRange > latestEthBlock) return; // Wait until more blocks are mined
+        if (lastBlockProcessed + this.config.EVENTS_RANGE > lastBlock) return; // Wait until more blocks are mined
 
-        latestEthBlock = Math.min(
-          latestEthBlock,
-          lastBlockProcessed + MaxBlockRange
-        );
+        lastBlock = Math.min(lastBlock, lastBlockProcessed + this.config.EVENTS_RANGE);
 
-        if (latestEthBlock > lastBlockProcessed) {
+        if (lastBlock > lastBlockProcessed) {
           await this.getEvents(
+            dappId,
             this.getInstance(address, ABI),
             lastBlockProcessed,
-            latestEthBlock
+            lastBlock
           );
-          lastBlockProcessed = latestEthBlock + 1;
+          lastBlockProcessed = lastBlock + 1;
         }
       } catch (e) {
         console.log(e.toString());
