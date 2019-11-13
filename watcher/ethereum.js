@@ -32,6 +32,29 @@ class Ethereum {
 
   async getEvents(fromBlock, toBlock) {
     console.log("Queriying ", fromBlock, toBlock);
+
+
+
+// TODO: obtain this for all contracts / events in dapps/ folder
+const abi = [
+  {
+    name: "Created",
+    type: "event",
+    inputs: [
+      { indexed: true, name: "offerId", type: "uint256" },
+      { indexed: true, name: "seller", type: "address" },
+      { indexed: true, name: "buyer", type: "address" },
+      { indexed: false, name: "escrowId", type: "uint256" }
+    ]
+  }
+];
+this.contract = new this.web3.eth.Contract(
+  abi,
+  "0xEE301C6A57e2fBf593F558C1aE52B20485101fC2"
+);
+
+
+
     // TODO:
     let events = await this.contract.getPastEvents("Created", {
       filter: {},
@@ -40,48 +63,32 @@ class Ethereum {
     });
 
     for (let event of events) {
-      // TODO: process each event. See if the return values matches the indexed address field, and send email
-      console.log(event);
+      this.events.emit("web3:event", event);
     }
   }
 
-  async scan() {
-    // TODO: obtain this for all contracts / events in dapps/ folder
-    const abi = [
-      {
-        name: "Created",
-        type: "event",
-        inputs: [
-          { indexed: true, name: "offerId", type: "uint256" },
-          { indexed: true, name: "seller", type: "address" },
-          { indexed: true, name: "buyer", type: "address" },
-          { indexed: false, name: "escrowId", type: "uint256" }
-        ]
-      }
-    ];
-    this.contract = new this.web3.eth.Contract(
-      abi,
-      "0xEE301C6A57e2fBf593F558C1aE52B20485101fC2"
-    );
 
+
+  async scan(startBlockNumber = 0) {
     const MaxBlockRange = 30; // TODO: extract to config
 
-    let latestCachedBlock = 5434202; // TODO: obtain latest block written to database
-    let latestEthBlock = 0; // latest block in blockchain
+    let lastBlockProcessed = startBlockNumber || await this.web3.eth.getBlockNumber(); // TODO: allow user to specify starting block
+    let latestEthBlock;
 
     await this.poll(async () => {
       try {
-        latestEthBlock = (await this.web3.eth.getBlockNumber()) - 12; // 12 blocks of delay to avoid reorgs.
+        latestEthBlock = (await this.web3.eth.getBlockNumber()) - 20; // 20 blocks of delay to avoid reorgs. TODO: extract to config
 
-        if (latestCachedBlock + MaxBlockRange > latestEthBlock) return; // Wait until more blocks are mined
+        if (lastBlockProcessed + MaxBlockRange > latestEthBlock) return; // Wait until more blocks are mined
 
         latestEthBlock = Math.min(
           latestEthBlock,
-          latestCachedBlock + MaxBlockRange
+          lastBlockProcessed + MaxBlockRange
         );
-        if (latestEthBlock > latestCachedBlock) {
-          await this.getEvents(latestCachedBlock, latestEthBlock);
-          latestCachedBlock = latestEthBlock + 1;
+
+        if (latestEthBlock > lastBlockProcessed) {
+          await this.getEvents(lastBlockProcessed, latestEthBlock);
+          lastBlockProcessed = latestEthBlock + 1;
         }
       } catch (e) {
         console.log(e.toString());
