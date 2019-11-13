@@ -45,6 +45,11 @@ class DAppConfig {
     return ABI; 
   }
 
+  template(dappId, contract, eventName) {
+    const dappConfig = this.config(dappId);
+    return Object.values(dappConfig.templates.contracts[contract].events).filter(x => x.ABI.name === eventName && x.ABI.type === 'event');
+  }
+
 }
 
 module.exports = DAppConfig;
