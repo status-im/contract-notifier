@@ -28,6 +28,23 @@ module.exports = {
               html: "escrow-creation-seller.html",
               text: "escrow-creation-seller.txt"
             }
+          },
+          "escrow-creation-buyer": {
+            ABI: {
+              name: "Created",
+              type: "event",
+              inputs: [
+                { indexed: true, name: "offerId", type: "uint256" },
+                { indexed: true, name: "seller", type: "address" },
+                { indexed: true, name: "buyer", type: "address" },
+                { indexed: false, name: "escrowId", type: "uint256" }
+              ]
+            },
+            index: "buyer",
+            template: {
+              html: "escrow-creation-buyer.html",
+              text: "escrow-creation-buyer.txt"
+            }
           }
         }
       }

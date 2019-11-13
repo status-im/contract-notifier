@@ -1,9 +1,11 @@
 const Web3 = require("web3");
+const path = require("path");
 
 class Ethereum {
   constructor(events, config) {
     this.events = events;
     this.config = config;
+    this.contracts = {};
   }
 
   init() {
@@ -30,49 +32,37 @@ class Ethereum {
     await this.poll(fn);
   }
 
-  async getEvents(fromBlock, toBlock) {
+  async getEvents(contractInstance, fromBlock, toBlock) {
     console.log("Queriying ", fromBlock, toBlock);
 
+    const eventNames = contractInstance.options.jsonInterface
+      .filter(x => x.type === "event")
+      .map(x => x.name);
 
+    await Promise.all(
+      eventNames.map(async eventName => {
+        let events = await contractInstance.getPastEvents(eventName, {
+          fromBlock: fromBlock,
+          toBlock: toBlock
+        });
 
-// TODO: obtain this for all contracts / events in dapps/ folder
-const abi = [
-  {
-    name: "Created",
-    type: "event",
-    inputs: [
-      { indexed: true, name: "offerId", type: "uint256" },
-      { indexed: true, name: "seller", type: "address" },
-      { indexed: true, name: "buyer", type: "address" },
-      { indexed: false, name: "escrowId", type: "uint256" }
-    ]
+        events.forEach(ev => this.events.emit("web3:event", ev));
+      })
+    );
   }
-];
-this.contract = new this.web3.eth.Contract(
-  abi,
-  "0xEE301C6A57e2fBf593F558C1aE52B20485101fC2"
-);
 
-
-
-    // TODO:
-    let events = await this.contract.getPastEvents("Created", {
-      filter: {},
-      fromBlock: fromBlock,
-      toBlock: toBlock
-    });
-
-    for (let event of events) {
-      this.events.emit("web3:event", event);
+  getInstance(address, ABI) {
+    if (!this.contracts[address]) {
+      this.contracts[address] = new this.web3.eth.Contract(ABI, address);
     }
+    return this.contracts[address];
   }
 
-
-
-  async scan(startBlockNumber = 0) {
+  async scan(address, ABI, startBlockNumber = 0) {
     const MaxBlockRange = 30; // TODO: extract to config
 
-    let lastBlockProcessed = startBlockNumber || await this.web3.eth.getBlockNumber(); // TODO: allow user to specify starting block
+    let lastBlockProcessed =
+      startBlockNumber || (await this.web3.eth.getBlockNumber()); // TODO: allow user to specify starting block
     let latestEthBlock;
 
     await this.poll(async () => {
@@ -87,7 +77,11 @@ this.contract = new this.web3.eth.Contract(
         );
 
         if (latestEthBlock > lastBlockProcessed) {
-          await this.getEvents(lastBlockProcessed, latestEthBlock);
+          await this.getEvents(
+            this.getInstance(address, ABI),
+            lastBlockProcessed,
+            latestEthBlock
+          );
           lastBlockProcessed = latestEthBlock + 1;
         }
       } catch (e) {

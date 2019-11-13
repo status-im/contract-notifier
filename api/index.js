@@ -12,10 +12,10 @@ const events = new Events();
 const Subscriber = require("../models/subscriber");
 const subscriberStatus = require("../models/subscriberStatus");
 const Mailer = require('../mail/sendgrid');
-const dappConfig = require('../config/dapps');
+const DappConfig = require('../config/dapps');
 
 
-
+const dapps = new DappConfig();
 const mailer = new Mailer(config);
 const db = new Database(events, config);
 
@@ -68,8 +68,7 @@ events.on("db:connected", () => {
         return res.status(404).json({ errors: errors.array() });
       }
 
-      // TODO: dappId should be a token
-      if(!dappConfig[dappId]){
+      if(!dapps.isDapp(dappId)){
         return res.status(404).send("Invalid dapp");
       }
 
@@ -112,8 +111,7 @@ events.on("db:connected", () => {
       body: { address, email, signature }
     } = req;
 
-    // TODO: validate dappId
-    if (dappId !== "status-teller-network") {
+    if(!dapps.isDapp(dappId)){
       return res.status(404).send("Invalid dapp");
     }
 

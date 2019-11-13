@@ -4,7 +4,9 @@ const Database = require("../database");
 const Ethereum = require("./ethereum");
 const events = new Events();
 const Mailer = require("../mail/sendgrid");
+const DappConfig = require("../config/dapps");
 
+const dapps = new DappConfig();
 const mailer = new Mailer(config);
 const db = new Database(events, config);
 const eth = new Ethereum(events, config);
@@ -14,8 +16,15 @@ eth.init();
 
 events.on("db:connected", () => {
   events.on("web3:connected", () => {
-    const procArgs = process.argv;
-    eth.scan(procArgs.length >= 3 ? parseInt(procArgs[2], 10) : 0);
+    const blockNum =
+      process.argv.length >= 3 ? parseInt(process.argv[2], 10) : 0;
+
+    dapps.getDapps().forEach(dappId => {
+      const contracts = dapps.contracts(dappId);
+      contracts.forEach(address => {
+        eth.scan(address, dapps.ABI(dappId, address), blockNum);
+      });
+    });
   });
 });
 
