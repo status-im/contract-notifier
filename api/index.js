@@ -10,15 +10,24 @@ const config = require("../config");
 const Database = require("../database");
 const events = new Events();
 const Subscriber = require("../models/subscriber");
-const subscriberStatus = require("../models/subscriber-status");
 const Mailer = require("../mail/sendgrid");
 const DappConfig = require("../config/dapps");
+const cryptoRandomString = require("crypto-random-string");
 
 const dappConfig = new DappConfig();
 const mailer = new Mailer(config);
 const db = new Database(events, config);
 
 db.init();
+
+const getToken = () => {
+  const expirationTime = new Date();
+  expirationTime.setUTCHours(expirationTime.getUTCHours() + 2);
+  return {
+    token: cryptoRandomString({ length: 150, type: "url-safe" }),
+    expirationTime
+  };
+};
 
 const hexValidator = value => {
   const regex = /^[0-9A-Fa-f]*$/g;
@@ -73,7 +82,6 @@ events.on("db:connected", () => {
         return res.status(404).send("Invalid signature");
       }
 
-      // TODO: rate limit the number of times an user can subscribe
       // TODO: handle subscriptions to particular events
 
       try {
@@ -82,24 +90,43 @@ events.on("db:connected", () => {
           address
         });
 
+        const t = getToken();
+
         if (!subscriber) {
           await Subscriber.create({
             dappId,
             email,
             address,
-            status: subscriberStatus.CONFIRMED // TODO: remove this once email confirmation is done
+            verificationTokens: [t]
           });
+        } else if (!subscriber.isVerified) {
+          const d = new Date(subscriber.lastSignUpAttempt);
+          d.setMinutes(d.getMinutes() + 5);
+          if (d > new Date()) {
+            return res
+              .status(400)
+              .send(
+                "You need to wait at least 5 minutes between sign up attempts"
+              );
+          }
 
+          subscriber.lastSignUpAttempt = d;
+          subscriber.verificationTokens.push(t);
+          subscriber.save();
+        }
+
+        if (!subscriber || !subscriber.isVerified) {
           const template = dappConfig.template(dappId, "sign-up");
-
           mailer.send(
             dappConfig.getEmailTemplate(dappId, template),
             dappConfig.config(dappId).from,
             {
-              email
+              email,
+              token: t.token
             }
           );
         }
+
       } catch (err) {
         // TODO: add global error handler
         return res.status(400).send(err.message);

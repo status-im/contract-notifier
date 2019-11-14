@@ -1,4 +1,0 @@
-module.exports = {
-  UNCONFIRMED: "UNCONFIRMED",
-  CONFIRMED: "CONFIRMED"
-};

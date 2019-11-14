@@ -1,8 +1,13 @@
 const mongoose = require("mongoose");
-const subscriberStatus = require("./subscriber-status");
 const Schema = mongoose.Schema;
 
 const validator = require("validator");
+
+const VerificationSchema = new Schema({ 
+  token: String,
+  expirationTime: Date
+});
+
 
 const SubscriberSchema = new Schema({
   id: Schema.Types.ObjectId,
@@ -38,16 +43,20 @@ const SubscriberSchema = new Schema({
       message: props => `${props.value} is not a valid email`
     }
   },
-  status: {
-    type: String,
-    default: subscriberStatus.UNCONFIRMED,
-    enum: Object.values(subscriberStatus)
-  }
+  lastSignUpAttempt: {
+    type: Date,
+    default: new Date()
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationTokens: [VerificationSchema]
 });
 
 
-SubscriberSchema.statics.findActiveUsersByDapp = function(dappId) {
-  return this.find({ dappId, status: subscriberStatus.CONFIRMED });
+SubscriberSchema.statics.findVerifiedUsersByDapp = function(dappId) {
+  return this.find({ dappId, isVerified: true });
 };
 
 module.exports = mongoose.model("Subscribers", SubscriberSchema);

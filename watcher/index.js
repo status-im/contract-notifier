@@ -32,7 +32,7 @@ events.on("db:connected", () => {
 
 events.on("web3:event", ({ dappId, address, event, returnValues }) => {
   dappConfig.eventConfig(dappId, address, event).forEach(async eventConfig => {
-    const users = await Subscribers.findActiveUsersByDapp(dappId);
+    const users = await Subscribers.findVerifiedUsersByDapp(dappId);
     users.forEach(user => {
       if (addressCompare(returnValues[eventConfig.index], user.address)) {
         console.log("Sending email...");
