@@ -20,10 +20,9 @@ const config = {
   /* Email */
   SENDGRID_API_KEY: secret.SENDGRID_API_KEY,
   /* WATCHER */
-  // With this example, if current block is 100, it will wait until block 108 to query blocks 101-103
-  BLOCK_DELAY: 5, // 60 secs... this could be helpful to avoid reorgs
-  EVENTS_RANGE: 3, // blocks    
-  POLL_SLEEP: 1 // seconds
+  BLOCK_DELAY: 5, // ~60-70 secs... this could be helpful to avoid reorgs
+  EVENTS_RANGE: 1, // blocks    
+  POLL_SLEEP: 3 // seconds
 };
 
 module.exports = config;
