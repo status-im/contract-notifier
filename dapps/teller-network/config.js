@@ -10,9 +10,9 @@ module.exports = {
       text: "sign-up.txt"
     },
     contracts: {
-      "0xEE301C6A57e2fBf593F558C1aE52B20485101fC2": {
+      "0xFCC8175384c199C3Bc7a43c3583CbdcEf74ceC24": {
         events: {
-          "escrow-creation-seller": {
+          "escrow-creation": {
             ABI: {
               name: "Created",
               type: "event",
@@ -26,26 +26,42 @@ module.exports = {
             index: "seller",
             template: {
               subject: "New trade!",
-              html: "escrow-creation-seller.html",
-              text: "escrow-creation-seller.txt"
+              html: "escrow-creation.html",
+              text: "escrow-creation.txt"
             }
           },
-          "escrow-creation-buyer": {
+          "escrow-funded": {
             ABI: {
-              name: "Created",
+              name: "Funded",
               type: "event",
               inputs: [
-                { indexed: true, name: "offerId", type: "uint256" },
-                { indexed: true, name: "seller", type: "address" },
+                { indexed: true, name: "escrowId", type: "uint256" },
                 { indexed: true, name: "buyer", type: "address" },
-                { indexed: false, name: "escrowId", type: "uint256" }
+                { indexed: false, name: "expirationTime", type: "uint256" },
+                { indexed: false, name: "amount", type: "uint256" }
               ]
             },
             index: "buyer",
             template: {
-              subject: "New trade!",
-              html: "escrow-creation-buyer.html",
-              text: "escrow-creation-buyer.txt"
+              subject: "Your escrow has been funded!",
+              html: "escrow-funded.html",
+              text: "escrow-funded.txt"
+            }
+          },
+          "escrow-paid": {
+            ABI: {
+              name: "Paid",
+              type: "event",
+              inputs: [
+                { indexed: true, name: "escrowId", type: "uint256" },
+                { indexed: true, name: "seller", type: "address" }
+              ]
+            },
+            index: "seller",
+            template: {
+              subject: "Your escrow has been paid!",
+              html: "escrow-paid.html",
+              text: "escrow-paid.txt"
             }
           }
         }
