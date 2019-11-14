@@ -109,35 +109,49 @@ events.on("db:connected", () => {
     }
   );
 
-  app.post("/:dapp/unsubscribe", async (req, res) => {
-    // TODO:
-    const {
-      params: { dappId },
-      body: { address, email, signature }
-    } = req;
+  app.post(
+    "/:dappId/unsubscribe",
+    [
+      check("signature")
+        .exists()
+        .isLength({ min: 132, max: 132 })
+        .custom(hexValidator),
+      check("address")
+        .exists()
+        .isLength({ min: 42, max: 42 })
+        .custom(hexValidator),
+      check("dappId").exists()
+    ],
+    async (req, res) => {
+      // TODO:
+      const {
+        params: { dappId },
+        body: { address, signature }
+      } = req;
 
-    if (!dappConfig.isDapp(dappId)) {
-      return res.status(404).send("Invalid dapp");
+      if (!dappConfig.isDapp(dappId)) {
+        return res.status(404).send("Invalid dapp");
+      }
+
+      if (!isSignatureValid(address, dappId, signature)) {
+        return res.status(404).send("Invalid signature");
+      }
+
+      // TODO: handle unsubscribe to particular events
+
+      try {
+        await Subscriber.deleteOne({
+          dappId,
+          address
+        });
+      } catch (err) {
+        // TODO: add global error handler
+        return res.status(400).send(err.message);
+      }
+
+      return res.status(200).send("OK");
     }
-
-    if (!isSignatureValid(address, email, signature)) {
-      return res.status(404).send("Invalid signature");
-    }
-
-    // TODO: handle unsubscribe to particular events
-
-    try {
-      await Subscriber.deleteOne({
-        dapp: req.params.dappId,
-        address: req.body.address
-      });
-    } catch (err) {
-      // TODO: add global error handler
-      return res.status(400).send(err.message);
-    }
-
-    return res.status(200).send("OK");
-  });
+  );
 
   app.get("/confirm/:token", (req, res) => {
     // TODO:
