@@ -1,1 +1,2 @@
 Welcome to teller network!
+Verify your email at TODO: {{ token }}

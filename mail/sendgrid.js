@@ -1,6 +1,5 @@
 const sgMail = require("@sendgrid/mail");
-const path = require("path");
-const fs = require("fs");
+const Handlebars = require("handlebars");
 
 class SendGridMailer {
   constructor(config) {
@@ -8,12 +7,15 @@ class SendGridMailer {
   }
 
   send(template, from, data) {
-    // TODO: data should be used for templating
+    const tplText = Handlebars.compile(template.text);
+    const tplHtml = Handlebars.compile(template.html);
 
     const msg = {
       to: data.email,
       from,
-      ...template
+      ...template,
+      text: tplText(data),
+      html: tplHtml(data)
     };
 
     sgMail.send(msg);

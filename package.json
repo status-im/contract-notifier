@@ -17,6 +17,7 @@
     "express": "^4.17.1",
     "express-rate-limit": "^5.0.0",
     "express-validator": "^6.2.0",
+    "handlebars": "^4.5.2",
     "helmet": "^3.21.2",
     "mongoose": "5.7.5",
     "strip-hex-prefix": "^1.0.0",

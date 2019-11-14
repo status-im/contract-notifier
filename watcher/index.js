@@ -5,7 +5,7 @@ const Ethereum = require("./ethereum");
 const { addressCompare } = require("./utils");
 const Mailer = require("../mail/sendgrid");
 const DappConfig = require("../config/dapps");
-const Subscribers = require("../models/subscriber");
+const Subscribers = require("../models/subscribers");
 
 const events = new Events();
 const dappConfig = new DappConfig();

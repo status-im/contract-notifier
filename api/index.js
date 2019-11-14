@@ -1,6 +1,5 @@
 const Events = require("events");
-const stripHexPrefix = require("strip-hex-prefix");
-const { isSignatureValid } = require("./utils");
+const { isSignatureValid, getToken, hexValidator } = require("./utils");
 const express = require("express");
 const { check, validationResult } = require("express-validator");
 const cors = require("cors");
@@ -8,34 +7,19 @@ const helmet = require("helmet");
 const rateLimit = require("../middleware/rate-limit");
 const config = require("../config");
 const Database = require("../database");
-const events = new Events();
-const Subscriber = require("../models/subscriber");
+const Subscribers = require("../models/subscribers");
+const Verifications = require("../models/verifications");
 const Mailer = require("../mail/sendgrid");
 const DappConfig = require("../config/dapps");
-const cryptoRandomString = require("crypto-random-string");
+
+
+const events = new Events();
 
 const dappConfig = new DappConfig();
 const mailer = new Mailer(config);
 const db = new Database(events, config);
 
 db.init();
-
-const getToken = () => {
-  const expirationTime = new Date();
-  expirationTime.setUTCHours(expirationTime.getUTCHours() + 2);
-  return {
-    token: cryptoRandomString({ length: 150, type: "url-safe" }),
-    expirationTime
-  };
-};
-
-const hexValidator = value => {
-  const regex = /^[0-9A-Fa-f]*$/g;
-  if (regex.test(stripHexPrefix(value))) {
-    return true;
-  }
-  throw new Error("Invalid hex string");
-};
 
 events.on("db:connected", () => {
   const app = express();
@@ -85,7 +69,7 @@ events.on("db:connected", () => {
       // TODO: handle subscriptions to particular events
 
       try {
-        const subscriber = await Subscriber.findOne({
+        const subscriber = await Subscribers.findOne({
           dappId,
           address
         });
@@ -93,11 +77,15 @@ events.on("db:connected", () => {
         const t = getToken();
 
         if (!subscriber) {
-          await Subscriber.create({
+          const s = await Subscribers.create({
             dappId,
             email,
-            address,
-            verificationTokens: [t]
+            address
+          });
+
+          await Verifications.create({
+            ...t,
+            subscriber: s._id
           });
         } else if (!subscriber.isVerified) {
           const d = new Date(subscriber.lastSignUpAttempt);
@@ -111,8 +99,12 @@ events.on("db:connected", () => {
           }
 
           subscriber.lastSignUpAttempt = d;
-          subscriber.verificationTokens.push(t);
-          subscriber.save();
+          await subscriber.save();
+
+          await Verification.create({
+            ...t,
+            subscriber: subscriber._id
+          });
         }
 
         if (!subscriber || !subscriber.isVerified) {
@@ -126,7 +118,6 @@ events.on("db:connected", () => {
             }
           );
         }
-
       } catch (err) {
         // TODO: add global error handler
         return res.status(400).send(err.message);
@@ -167,7 +158,7 @@ events.on("db:connected", () => {
       // TODO: handle unsubscribe to particular events
 
       try {
-        await Subscriber.deleteOne({
+        await Subscribers.deleteOne({
           dappId,
           address
         });
@@ -180,8 +171,33 @@ events.on("db:connected", () => {
     }
   );
 
-  app.get("/confirm/:token", (req, res) => {
-    // TODO:
+  app.get("/confirm/:token", [check("token").exists()], async (req, res) => {
+    const {
+      params: { token }
+    } = req;
+
+    const verification = await Verifications.findOne({
+      token
+    }).populate("subscriber");
+
+    if (verification) {
+      if (verification.expirationTime < new Date()) {
+        return res.status(400).send("Verification token already expired");
+      }
+
+      if (!verification.subscriber.isVerified) {
+        verification.subscriber.isVerified = true;
+        await verification.subscriber.save();
+      }
+
+      await Verifications.deleteMany({
+        subscriber: verification.subscriber._id
+      });
+    } else {
+      return res.status(400).send("Invalid verification token");
+    }
+
+    return res.status(200).send("OK");
   });
 
   app.get("/", (req, res) => res.status(200).json({ ok: true }));

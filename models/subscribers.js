@@ -3,12 +3,6 @@ const Schema = mongoose.Schema;
 
 const validator = require("validator");
 
-const VerificationSchema = new Schema({ 
-  token: String,
-  expirationTime: Date
-});
-
-
 const SubscriberSchema = new Schema({
   id: Schema.Types.ObjectId,
   dappId: {
@@ -50,10 +44,8 @@ const SubscriberSchema = new Schema({
   isVerified: {
     type: Boolean,
     default: false
-  },
-  verificationTokens: [VerificationSchema]
+  }
 });
-
 
 SubscriberSchema.statics.findVerifiedUsersByDapp = function(dappId) {
   return this.find({ dappId, isVerified: true });
