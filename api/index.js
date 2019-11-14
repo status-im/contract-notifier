@@ -1,5 +1,5 @@
 const Events = require("events");
-const stripHexPrefix = require('strip-hex-prefix');
+const stripHexPrefix = require("strip-hex-prefix");
 const { isSignatureValid } = require("./utils");
 const express = require("express");
 const { check, validationResult } = require("express-validator");
@@ -11,24 +11,22 @@ const Database = require("../database");
 const events = new Events();
 const Subscriber = require("../models/subscriber");
 const subscriberStatus = require("../models/subscriber-status");
-const Mailer = require('../mail/sendgrid');
-const DappConfig = require('../config/dapps');
+const Mailer = require("../mail/sendgrid");
+const DappConfig = require("../config/dapps");
 
-const dapps = new DappConfig();
+const dappConfig = new DappConfig();
 const mailer = new Mailer(config);
 const db = new Database(events, config);
 
 db.init();
 
-
 const hexValidator = value => {
   const regex = /^[0-9A-Fa-f]*$/g;
-  if(regex.test(stripHexPrefix(value))){
+  if (regex.test(stripHexPrefix(value))) {
     return true;
   }
-  throw new Error('Invalid hex string');
+  throw new Error("Invalid hex string");
 };
-
 
 events.on("db:connected", () => {
   const app = express();
@@ -45,11 +43,11 @@ events.on("db:connected", () => {
     [
       check("signature")
         .exists()
-        .isLength({min: 132, max: 132})
+        .isLength({ min: 132, max: 132 })
         .custom(hexValidator),
       check("address")
         .exists()
-        .isLength({min: 42, max: 42})
+        .isLength({ min: 42, max: 42 })
         .custom(hexValidator),
       check("email")
         .exists()
@@ -67,7 +65,7 @@ events.on("db:connected", () => {
         return res.status(404).json({ errors: errors.array() });
       }
 
-      if(!dapps.isDapp(dappId)){
+      if (!dappConfig.isDapp(dappId)) {
         return res.status(404).send("Invalid dapp");
       }
 
@@ -92,8 +90,15 @@ events.on("db:connected", () => {
             status: subscriberStatus.CONFIRMED // TODO: remove this once email confirmation is done
           });
 
-          mailer.send(dappId, 'sign-up', { email });
+          const template = dappConfig.template(dappId, "sign-up");
 
+          mailer.send(
+            dappConfig.getEmailTemplate(dappId, template),
+            dappConfig.config(dappId).from,
+            {
+              email
+            }
+          );
         }
       } catch (err) {
         // TODO: add global error handler
@@ -105,12 +110,13 @@ events.on("db:connected", () => {
   );
 
   app.post("/:dapp/unsubscribe", async (req, res) => {
+    // TODO:
     const {
       params: { dappId },
       body: { address, email, signature }
     } = req;
 
-    if(!dapps.isDapp(dappId)){
+    if (!dappConfig.isDapp(dappId)) {
       return res.status(404).send("Invalid dapp");
     }
 
@@ -133,9 +139,11 @@ events.on("db:connected", () => {
     return res.status(200).send("OK");
   });
 
-  app.get("/confirm/:token", (req, res) => {});
+  app.get("/confirm/:token", (req, res) => {
+    // TODO:
+  });
 
-  app.get("/", (req, res) => res.status(200).json({ status: isConnected() }));
+  app.get("/", (req, res) => res.status(200).json({ ok: true }));
 
   app.listen(config.PORT, () =>
     console.log(`App listening on port ${config.PORT}!`)
@@ -144,8 +152,6 @@ events.on("db:connected", () => {
 
 // MVP
 // ====
-
-// Folder with DApp information, event ABI, and email templates
 
 // TODO: register DAPP and content
 // TODO: handle errors sending email

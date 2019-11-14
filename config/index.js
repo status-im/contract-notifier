@@ -21,8 +21,8 @@ const config = {
   SENDGRID_API_KEY: secret.SENDGRID_API_KEY,
   /* WATCHER */
   BLOCK_DELAY: 12, // 15-170 secs
-  EVENTS_RANGE: 30,
-  POLL_SLEEP: 1 // seconds
+  EVENTS_RANGE: 20, // blocks
+  POLL_SLEEP: 2 // seconds
 };
 
 module.exports = config;

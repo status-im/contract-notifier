@@ -31,13 +31,13 @@ events.on("db:connected", () => {
 });
 
 events.on("web3:event", ({ dappId, address, event, returnValues }) => {
-  dappConfig.template(dappId, address, event).forEach(async template => {
+  dappConfig.eventConfig(dappId, address, event).forEach(async eventConfig => {
     const users = await Subscribers.findActiveUsersByDapp(dappId);
     users.forEach(user => {
-      if (addressCompare(returnValues[template.index], user.address)) {
+      if (addressCompare(returnValues[eventConfig.index], user.address)) {
         console.log("Sending email...");
         mailer.send(
-          dappConfig.getEmailTemplate(dappId, template),
+          dappConfig.getEmailTemplate(dappId, eventConfig.template),
           dappConfig.config(dappId).from,
           {
             email: user.email,

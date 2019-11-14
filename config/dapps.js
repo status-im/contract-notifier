@@ -45,17 +45,23 @@ class DAppConfig {
     return ABI; 
   }
 
-  template(dappId, contract, eventName) {
+  template(dappId, templateName) {
+    const dappConfig = this.config(dappId);
+    return dappConfig.templates[templateName];
+    }
+
+  eventConfig(dappId, contract, eventName) {
     const dappConfig = this.config(dappId);
     return Object.values(dappConfig.templates.contracts[contract].events).filter(x => x.ABI.name === eventName && x.ABI.type === 'event');
   }
 
-  getEmailTemplate(dappId, t){
-    // TODO: avoid reading this on each user/email
+  getEmailTemplate(dappId, template){
     const templatePath = path.join("./dapps", dappId);
-    const subject = t.template.subject;
-    const text = fs.readFileSync(path.join(templatePath, t.template.text)).toString();
-    const html = fs.readFileSync(path.join(templatePath, t.template.html)).toString();
+    const subject = template.subject;
+
+    // TODO: avoid reading this on each user/email
+    const text = fs.readFileSync(path.join(templatePath, template.text)).toString();
+    const html = fs.readFileSync(path.join(templatePath, template.html)).toString();
     return {text, html, subject};
   }
 
