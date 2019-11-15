@@ -19,7 +19,7 @@ const config = {
   BLOCKCHAIN_CONNECTION_POINT: env.BLOCKCHAIN_CONNECTION_POINT || secret.BLOCKCHAIN_CONNECTION_POINT || "http://localhost:8545",
   /* Email */
   SENDGRID_API_KEY: secret.SENDGRID_API_KEY,
-  /* WATCHER */
+  /* Watcher */
   BLOCK_DELAY: 6, //  [Recommended 6 ~80 secs...] this could be helpful to avoid reorgs
   POLL_SLEEP: 30 // seconds
 };
