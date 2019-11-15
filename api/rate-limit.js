@@ -1,5 +1,5 @@
 const rateLimit = require("express-rate-limit");
-const config = require("./../config");
+const config = require("../config");
 
 class RateLimitMiddleware {
   static setup() {
