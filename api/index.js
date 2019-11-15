@@ -65,6 +65,8 @@ events.on("db:connected", () => {
 
   app.get("/confirm/:token", [check("token").exists()], Controller.confirm());
 
+  app.get("/:dappId/user/:address", [check("address").exists().isLength({min:42,max:42}).custom(hexValidator), check("dappId").exists()], Controller.userExists());
+
   app.get("/", (req, res) => res.status(200).json({ ok: true }));
 
   app.listen(config.PORT, () => console.log(`App listening on port ${config.PORT}!`));

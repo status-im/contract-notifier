@@ -85,6 +85,11 @@ class Controller {
         body: { address, signature }
       } = req;
 
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(404).json({ errors: errors.array() });
+      }
+
       if (!dappConfig.isDapp(dappId)) {
         return res.status(404).send("Invalid dapp");
       }
@@ -115,6 +120,11 @@ class Controller {
         params: { token }
       } = req;
 
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(404).json({ errors: errors.array() });
+      }
+
       const verification = await Verifications.findOne({
         token
       }).populate("subscriber");
@@ -137,6 +147,27 @@ class Controller {
       }
 
       return res.status(200).send("OK");
+    };
+  }
+
+  static userExists() {
+    return async (req, res) => {
+      const {
+        params: { dappId, address }
+      } = req;
+
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(404).json({ errors: errors.array() });
+      }
+
+      const subscriber = await Subscribers.findOne({
+        dappId,
+        address,
+        isVerified: true
+      });
+
+      return res.status(200).json({ isUser: subscriber ? true : false });
     };
   }
 }
