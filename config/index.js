@@ -21,8 +21,7 @@ const config = {
   SENDGRID_API_KEY: secret.SENDGRID_API_KEY,
   /* WATCHER */
   BLOCK_DELAY: 5, // ~60-70 secs... this could be helpful to avoid reorgs
-  EVENTS_RANGE: 1, // blocks    
-  POLL_SLEEP: 3 // seconds
+  POLL_SLEEP: 60 // seconds
 };
 
 module.exports = config;

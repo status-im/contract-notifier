@@ -33,7 +33,7 @@ class Ethereum {
   }
 
   async getEvents(dappId, contractInstance, fromBlock, toBlock) {
-    console.log("Querying ", fromBlock, toBlock);
+    console.log("Obtaining events from block range: ", fromBlock, "-", toBlock);
 
     const eventNames = contractInstance.options.jsonInterface
       .filter(x => x.type === "event")
@@ -61,27 +61,24 @@ class Ethereum {
     return this.contracts[address];
   }
 
-  async scan(dappId, address, ABI, startBlockNumber = 0) {
+  async scan(dappId, address, ABI, startBlock = 0) {
     let lastBlock = await this.web3.eth.getBlockNumber();
-    let lastBlockProcessed = startBlockNumber || lastBlock;
+    let lastBlockProcessed = startBlock || lastBlock - this.config.BLOCK_DELAY;
 
     await this.poll(async () => {
       try {
-        lastBlock = (await this.web3.eth.getBlockNumber()) - this.config.BLOCK_DELAY; // To avoid losing events due to reorgs. 20 = 
+        const currentBlock = await this.web3.eth.getBlockNumber();
+        lastBlock = currentBlock - this.config.BLOCK_DELAY; // To avoid losing events due to reorgs
 
-        if (lastBlockProcessed + this.config.EVENTS_RANGE > lastBlock) return; // Wait until more blocks are mined
+        if (lastBlockProcessed > lastBlock) return; // Wait until more blocks are mined
 
-        lastBlock = Math.min(lastBlock, lastBlockProcessed + this.config.EVENTS_RANGE);
-
-        if (lastBlock > lastBlockProcessed) {
-          await this.getEvents(
-            dappId,
-            this.getInstance(address, ABI),
-            lastBlockProcessed,
-            lastBlock
-          );
-          lastBlockProcessed = lastBlock + 1;
-        }
+        await this.getEvents(
+          dappId,
+          this.getInstance(address, ABI),
+          lastBlockProcessed,
+          lastBlock
+        );
+        lastBlockProcessed = lastBlock + 1;
       } catch (e) {
         console.log(e.toString());
       }
