@@ -20,8 +20,8 @@ const config = {
   /* Email */
   SENDGRID_API_KEY: secret.SENDGRID_API_KEY,
   /* WATCHER */
-  BLOCK_DELAY: 5, // ~60-70 secs... this could be helpful to avoid reorgs
-  POLL_SLEEP: 60 // seconds
+  BLOCK_DELAY: 6, //  [Recommended 6 ~80 secs...] this could be helpful to avoid reorgs
+  POLL_SLEEP: 30 // seconds
 };
 
 module.exports = config;
