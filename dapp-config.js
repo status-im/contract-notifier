@@ -1,19 +1,17 @@
 const path = require("path");
 const fs = require("fs");
 class DAppConfig {
-  constructor(){
+  constructor(config){
     this.configurations = {};
+    this.appConfig = config;
   }
 
   isDapp(dappId) {
-    // TODO:
-    if (dappId === "teller-network") return true;
-    return false;
+    return this.appConfig.VALID_DAPPS.indexOf(dappId) > -1;
   }
 
   getDapps(){
-    // TODO:
-    return ['teller-network'];
+    return this.appConfig.VALID_DAPPS;
   }
 
   config(dappId) {

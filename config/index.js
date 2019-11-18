@@ -21,7 +21,8 @@ const config = {
   SENDGRID_API_KEY: secret.SENDGRID_API_KEY,
   /* Watcher */
   BLOCK_DELAY: 6, //  [Recommended 6 ~80 secs...] this could be helpful to avoid reorgs
-  POLL_SLEEP: 30 // seconds
+  POLL_SLEEP: 30, // seconds
+  VALID_DAPPS: ['teller-network']
 };
 
 module.exports = config;

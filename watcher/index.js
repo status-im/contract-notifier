@@ -7,8 +7,9 @@ const Mailer = require("../mail/sendgrid");
 const DappConfig = require("../dapp-config");
 const Subscribers = require("../models/subscribers");
 const logger = require("../logger")('watcher');
+
 const events = new Events();
-const dappConfig = new DappConfig();
+const dappConfig = new DappConfig(config);
 const mailer = new Mailer(config);
 const db = new Database(events, config);
 const eth = new Ethereum(events, config);

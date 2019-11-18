@@ -21,7 +21,8 @@ class Ethereum {
         this.events.emit("web3:connected");
       })
       .catch(error => {
-        logger.error("DB - ", err);
+        console.log(error);
+        logger.error("web3 - ", error);
         process.exit(1);
       });
   }
