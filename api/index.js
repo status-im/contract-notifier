@@ -39,6 +39,9 @@ events.on("db:connected", () => {
     const response = { error: err.message };
     if (err instanceof BadRequest && err.details) {
       response.details = err.details;
+    } else {
+      console.error(err);
+      response.error = "Service unavailable";
     }
     res.status(err.statusCode).json(response);
   });

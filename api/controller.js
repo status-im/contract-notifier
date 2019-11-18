@@ -27,48 +27,51 @@ class Controller {
 
       // TODO: handle subscriptions to particular events
 
-      const subscriber = await Subscribers.findOne({
-        dappId,
-        address
-      });
-
-      const t = getToken();
-
-      if (!subscriber) {
-        const s = await Subscribers.create({
+      try {
+        const subscriber = await Subscribers.findOne({
           dappId,
-          email,
           address
         });
 
-        await Verifications.create({
-          ...t,
-          subscriber: s._id
-        });
-      } else if (!subscriber.isVerified) {
-        const d = new Date(subscriber.lastSignUpAttempt);
-        d.setMinutes(d.getMinutes() + 5);
-        if (d > new Date()) {
-          return next(new BadRequest("You need to wait at least 5 minutes between sign up attempts"));
+        const t = getToken();
+
+        if (!subscriber) {
+          const s = await Subscribers.create({
+            dappId,
+            email,
+            address
+          });
+
+          await Verifications.create({
+            ...t,
+            subscriber: s._id
+          });
+        } else if (!subscriber.isVerified) {
+          const d = new Date(subscriber.lastSignUpAttempt);
+          d.setMinutes(d.getMinutes() + 5);
+          if (d > new Date()) {
+            return next(new BadRequest("You need to wait at least 5 minutes between sign up attempts"));
+          }
+
+          subscriber.lastSignUpAttempt = d;
+          await subscriber.save();
+
+          await Verifications.create({
+            ...t,
+            subscriber: subscriber._id
+          });
         }
 
-        subscriber.lastSignUpAttempt = d;
-        await subscriber.save();
-
-        await Verifications.create({
-          ...t,
-          subscriber: subscriber._id
-        });
+        if (!subscriber || !subscriber.isVerified) {
+          const template = dappConfig.template(dappId, "sign-up");
+          mailer.send(dappConfig.getEmailTemplate(dappId, template), dappConfig.config(dappId).from, {
+            email,
+            token: t.token
+          });
+        }
+      } catch (err) {
+        return next(err);
       }
-
-      if (!subscriber || !subscriber.isVerified) {
-        const template = dappConfig.template(dappId, "sign-up");
-        mailer.send(dappConfig.getEmailTemplate(dappId, template), dappConfig.config(dappId).from, {
-          email,
-          token: t.token
-        });
-      }
-
       return res.status(200).send("OK");
     };
   }
@@ -96,10 +99,14 @@ class Controller {
 
       // TODO: handle unsubscribe to particular events
 
-      await Subscribers.deleteOne({
-        dappId,
-        address
-      });
+      try {
+        await Subscribers.deleteOne({
+          dappId,
+          address
+        });
+      } catch (err) {
+        return next(err);
+      }
 
       return res.status(200).send("OK");
     };
@@ -116,25 +123,29 @@ class Controller {
         return next(new BadRequest(errors.array()));
       }
 
-      const verification = await Verifications.findOne({
-        token
-      }).populate("subscriber");
+      try {
+        const verification = await Verifications.findOne({
+          token
+        }).populate("subscriber");
 
-      if (verification) {
-        if (verification.expirationTime < new Date()) {
-          return next(new BadRequest("Verification token already expired"));
+        if (verification) {
+          if (verification.expirationTime < new Date()) {
+            return next(new BadRequest("Verification token already expired"));
+          }
+
+          if (!verification.subscriber.isVerified) {
+            verification.subscriber.isVerified = true;
+            await verification.subscriber.save();
+          }
+
+          await Verifications.deleteMany({
+            subscriber: verification.subscriber._id
+          });
+        } else {
+          return next(new BadRequest("Invalid verification token"));
         }
-
-        if (!verification.subscriber.isVerified) {
-          verification.subscriber.isVerified = true;
-          await verification.subscriber.save();
-        }
-
-        await Verifications.deleteMany({
-          subscriber: verification.subscriber._id
-        });
-      } else {
-        return next(new BadRequest("Invalid verification token"));
+      } catch (err) {
+        return next(err);
       }
 
       return res.status(200).send("OK");
@@ -152,13 +163,17 @@ class Controller {
         return next(new BadRequest(errors.array()));
       }
 
-      const subscriber = await Subscribers.findOne({
-        dappId,
-        address,
-        isVerified: true
-      });
+      try {
+        const subscriber = await Subscribers.findOne({
+          dappId,
+          address,
+          isVerified: true
+        });
 
-      return res.status(200).json({ isUser: subscriber ? true : false });
+        return res.status(200).json({ isUser: subscriber ? true : false });
+      } catch (err) {
+        return next(err);
+      }
     };
   }
 }
