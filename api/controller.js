@@ -28,6 +28,9 @@ class Controller {
       // TODO: handle subscriptions to particular events
 
       try {
+        const session = await Subscribers.startSession();
+        session.startTransaction();
+
         const subscriber = await Subscribers.findOne({
           dappId,
           address
@@ -69,6 +72,8 @@ class Controller {
             token: t.token
           });
         }
+
+        session.commitTransaction();
       } catch (err) {
         return next(err);
       }
@@ -123,6 +128,9 @@ class Controller {
       }
 
       try {
+        const session = await Verifications.startSession();
+        session.startTransaction();
+
         const verification = await Verifications.findOne({
           token
         }).populate("subscriber");
@@ -140,7 +148,10 @@ class Controller {
           await Verifications.deleteMany({
             subscriber: verification.subscriber._id
           });
+
+          session.commitTransaction();
         } else {
+          session.abortTransaction();
           return next(new BadRequest("Invalid verification token"));
         }
       } catch (err) {
