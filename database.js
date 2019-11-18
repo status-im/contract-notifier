@@ -11,9 +11,10 @@ class Database {
     this.client = null;
   }
 
-  init(){
+  init(logger){
     if (config.DB_CONNECTION == undefined) {
-      throw Error('Unable to find MongoDB URI in DB_CONNECTION env variable!')
+      logger.error('DB - Unable to find MongoDB URI in DB_CONNECTION env variable!')
+      process.exit(1);
     }
 
     mongoose.Promise = global.Promise;
@@ -24,8 +25,11 @@ class Database {
       }
     }).then(() => {
       this.db = mongoose;
-      console.log("Connected successfully to db");
+      logger.log('info', "Connected successfully to db")
       this.events.emit('db:connected', this.db);
+    }).catch(err => {
+      logger.error("DB - ", err)
+      process.exit(1);
     });
   }
 }

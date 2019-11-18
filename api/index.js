@@ -10,17 +10,20 @@ const Database = require("../database");
 const Mailer = require("../mail/sendgrid");
 const DappConfig = require("../config/dapps");
 const Controller = require("./controller");
+const logger = require("../logger")('api');
+
+
 const events = new Events();
 const dappConfig = new DappConfig();
 const mailer = new Mailer(config);
 const db = new Database(events, config);
 
-db.init();
+db.init(logger);
 
 events.on("db:connected", () => {
   const app = express();
 
-  app.use(rateLimit());
+  app.use(rateLimit(logger));
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -34,9 +37,9 @@ events.on("db:connected", () => {
   app.get("/:dappId/user/:address", Validators.userExists, Controller.userExists());
   app.get("/", (req, res) => res.status(200).json({ ok: true }));
 
-  app.use(errorHandler());
+  app.use(errorHandler(logger));
 
-  app.listen(config.PORT, () => console.log(`App listening on port ${config.PORT}!`));
+  app.listen(config.PORT, () => logger.info(`App listening on port ${config.PORT}!`));
 });
 
 // MVP

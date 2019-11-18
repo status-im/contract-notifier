@@ -23,6 +23,7 @@
     "nodemon": "^1.19.4",
     "strip-hex-prefix": "^1.0.0",
     "validator": "11.0.0",
-    "web3": "^1.2.2"
+    "web3": "^1.2.2",
+    "winston": "^3.2.1"
   }
 }

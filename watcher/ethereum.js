@@ -6,19 +6,23 @@ class Ethereum {
     this.events = events;
     this.config = config;
     this.contracts = {};
+    this.logger = null;
   }
 
-  init() {
+  init(logger) {
+    this.logger = logger;
+
     this.web3 = new Web3(this.config.BLOCKCHAIN_CONNECTION_POINT);
 
     this.web3.eth.net
       .isListening()
       .then(() => {
-        console.log("Connected successfully to web3");
+        logger.info("Connected successfully to web3");
         this.events.emit("web3:connected");
       })
       .catch(error => {
-        throw error;
+        logger.error("DB - ", err);
+        process.exit(1);
       });
   }
 
@@ -33,11 +37,9 @@ class Ethereum {
   }
 
   async getEvents(dappId, contractInstance, fromBlock, toBlock) {
-    console.log("Obtaining events from block range: ", fromBlock, "-", toBlock);
+    this.logger.info("Obtaining events from block range: %s - %s", fromBlock, toBlock);
 
-    const eventNames = contractInstance.options.jsonInterface
-      .filter(x => x.type === "event")
-      .map(x => x.name);
+    const eventNames = contractInstance.options.jsonInterface.filter(x => x.type === "event").map(x => x.name);
 
     await Promise.all(
       eventNames.map(async eventName => {
@@ -69,18 +71,11 @@ class Ethereum {
       try {
         const currentBlock = await this.web3.eth.getBlockNumber();
         lastBlock = currentBlock - this.config.BLOCK_DELAY; // To avoid losing events due to reorgs
-
         if (lastBlockProcessed > lastBlock) return; // Wait until more blocks are mined
-
-        await this.getEvents(
-          dappId,
-          this.getInstance(address, ABI),
-          lastBlockProcessed,
-          lastBlock
-        );
+        await this.getEvents(dappId, this.getInstance(address, ABI), lastBlockProcessed, lastBlock);
         lastBlockProcessed = lastBlock + 1;
       } catch (e) {
-        console.log(e.toString());
+        this.logger.error(e)
       }
     });
   }

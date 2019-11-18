@@ -6,15 +6,20 @@ const { addressCompare } = require("./utils");
 const Mailer = require("../mail/sendgrid");
 const DappConfig = require("../config/dapps");
 const Subscribers = require("../models/subscribers");
-
+const logger = require("../logger")('watcher');
 const events = new Events();
 const dappConfig = new DappConfig();
 const mailer = new Mailer(config);
 const db = new Database(events, config);
 const eth = new Ethereum(events, config);
 
-db.init();
-eth.init();
+try {
+  db.init(logger);
+  eth.init(logger);
+} catch (err) {
+  logger.error("error", err);
+  process.exit(1);
+}
 
 events.on("db:connected", () => {
   events.on("web3:connected", () => {
@@ -34,7 +39,7 @@ events.on("web3:event", ({ dappId, address, event, returnValues }) => {
     const users = await Subscribers.findVerifiedUsersByDapp(dappId);
     users.forEach(async user => {
       if (addressCompare(returnValues[eventConfig.index], user.address)) {
-        console.log("Sending email...");
+        logger.info("Sending email...");
 
         let data = {
           email: user.email,
@@ -45,7 +50,7 @@ events.on("web3:event", ({ dappId, address, event, returnValues }) => {
           try {
             data = Object.assign(data, await eventConfig.template.data(eth.web3, returnValues));
           } catch (err) {
-            console.err("Error using data function", err);
+            logger.log("error", "Error using data function: ", err);
           }
         }
 
