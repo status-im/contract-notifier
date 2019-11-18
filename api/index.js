@@ -4,12 +4,12 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("./rate-limit");
+const errorHandler = require("./error-handler");
 const config = require("../config");
 const Database = require("../database");
 const Mailer = require("../mail/sendgrid");
 const DappConfig = require("../config/dapps");
 const Controller = require("./controller");
-const BadRequest = require("./bad-request");
 const events = new Events();
 const dappConfig = new DappConfig();
 const mailer = new Mailer(config);
@@ -34,17 +34,7 @@ events.on("db:connected", () => {
   app.get("/:dappId/user/:address", Validators.userExists, Controller.userExists());
   app.get("/", (req, res) => res.status(200).json({ ok: true }));
 
-  app.use(function(err, req, res, next) {
-    if (!err.statusCode) err.statusCode = 500;
-    const response = { error: err.message };
-    if (err instanceof BadRequest && err.details) {
-      response.details = err.details;
-    } else {
-      console.error(err);
-      response.error = "Service unavailable";
-    }
-    res.status(err.statusCode).json(response);
-  });
+  app.use(errorHandler());
 
   app.listen(config.PORT, () => console.log(`App listening on port ${config.PORT}!`));
 });
