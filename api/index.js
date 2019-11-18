@@ -8,7 +8,7 @@ const errorHandler = require("./error-handler");
 const config = require("../config");
 const Database = require("../database");
 const Mailer = require("../mail/sendgrid");
-const DappConfig = require("../config/dapps");
+const DappConfig = require("../dapp-config");
 const Controller = require("./controller");
 const logger = require("../logger")('api');
 

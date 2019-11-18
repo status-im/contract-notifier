@@ -31,7 +31,7 @@ yarn
 The `ENV` variable can be used to set these variables,  as well as a `.secret.json` file.
 
 #### Dapp
-Each dapp should have their own configuration and templates to send emails. To add a dapp, create a folder inside `./dapps/` with the dapp name. Also, edit `./config/dapps.js` lines 10 and 16 to add the new dapp. (**This will change with a proper dapp registry, to avoid this manual process**)
+Each dapp should have their own configuration and templates to send emails. To add a dapp, create a folder inside `./dapps/` with the dapp name. Also, edit `./dapps-config.js` lines 10 and 16 to add the new dapp. (**This will change with a proper dapp registry, to avoid this manual process**)
 
 Each dapp folder should have a `config.js` file and one or more .html and .txt templates. See `./dapps/teller-network/config.js` for a sample config. 
 

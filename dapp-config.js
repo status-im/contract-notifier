@@ -21,10 +21,7 @@ class DAppConfig {
       return this.configurations[dappId];
     }
 
-    const templatePath = path.join("../dapps", dappId);
-    this.configurations[dappId] = require(path.join(
-      path.join("./", templatePath, "config.js")
-    ));
+    this.configurations[dappId] = require('./' + path.join('./dapps/', dappId, "config.js"));
     
     return this.configurations[dappId];
   }
