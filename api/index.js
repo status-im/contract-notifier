@@ -26,6 +26,7 @@ events.on("db:connected", () => {
   app.use(express.urlencoded({ extended: true }));
   app.use(helmet.expectCt({ enforce: true, maxAge: 60 }));
   app.use(helmet());
+  app.set('trust proxy', 1);
 
   app.post("/:dappId/subscribe", Validators.subscribe, Controller.subscribe(dappConfig, mailer));
   app.post("/:dappId/unsubscribe", Validators.unsubscribe, Controller.unsubscribe(dappConfig));
