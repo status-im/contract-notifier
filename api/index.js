@@ -9,7 +9,7 @@ const Database = require("../database");
 const Mailer = require("../mail/sendgrid");
 const DappConfig = require("../config/dapps");
 const Controller = require("./controller");
-
+const BadRequest = require("./bad-request");
 const events = new Events();
 const dappConfig = new DappConfig();
 const mailer = new Mailer(config);
@@ -26,13 +26,22 @@ events.on("db:connected", () => {
   app.use(express.urlencoded({ extended: true }));
   app.use(helmet.expectCt({ enforce: true, maxAge: 60 }));
   app.use(helmet());
-  app.set('trust proxy', 1);
+  app.set("trust proxy", 1);
 
   app.post("/:dappId/subscribe", Validators.subscribe, Controller.subscribe(dappConfig, mailer));
   app.post("/:dappId/unsubscribe", Validators.unsubscribe, Controller.unsubscribe(dappConfig));
   app.get("/confirm/:token", Validators.confirm, Controller.confirm());
   app.get("/:dappId/user/:address", Validators.userExists, Controller.userExists());
   app.get("/", (req, res) => res.status(200).json({ ok: true }));
+
+  app.use(function(err, req, res, next) {
+    if (!err.statusCode) err.statusCode = 500;
+    const response = { error: err.message };
+    if (err instanceof BadRequest && err.details) {
+      response.details = err.details;
+    }
+    res.status(err.statusCode).json(response);
+  });
 
   app.listen(config.PORT, () => console.log(`App listening on port ${config.PORT}!`));
 });

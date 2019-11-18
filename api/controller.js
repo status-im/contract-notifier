@@ -2,10 +2,11 @@ const { validationResult } = require("express-validator");
 const { isSignatureValid, getToken } = require("./utils");
 const Subscribers = require("../models/subscribers");
 const Verifications = require("../models/verifications");
+const BadRequest = require("./bad-request");
 
 class Controller {
   static subscribe(dappConfig, mailer) {
-    return async (req, res) => {
+    return async (req, res, next) => {
       const {
         params: { dappId },
         body: { address, email, signature }
@@ -13,64 +14,59 @@ class Controller {
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(404).json({ errors: errors.array() });
+        return next(new BadRequest(errors.array()));
       }
 
       if (!dappConfig.isDapp(dappId)) {
-        return res.status(404).send("Invalid dapp");
+        return next(new BadRequest("DApp not found"));
       }
 
       if (!isSignatureValid(address, email, signature)) {
-        return res.status(404).send("Invalid signature");
+        return next(new BadRequest("Invalid signature"));
       }
 
       // TODO: handle subscriptions to particular events
 
-      try {
-        const subscriber = await Subscribers.findOne({
+      const subscriber = await Subscribers.findOne({
+        dappId,
+        address
+      });
+
+      const t = getToken();
+
+      if (!subscriber) {
+        const s = await Subscribers.create({
           dappId,
+          email,
           address
         });
 
-        const t = getToken();
-
-        if (!subscriber) {
-          const s = await Subscribers.create({
-            dappId,
-            email,
-            address
-          });
-
-          await Verifications.create({
-            ...t,
-            subscriber: s._id
-          });
-        } else if (!subscriber.isVerified) {
-          const d = new Date(subscriber.lastSignUpAttempt);
-          d.setMinutes(d.getMinutes() + 5);
-          if (d > new Date()) {
-            return res.status(400).send("You need to wait at least 5 minutes between sign up attempts");
-          }
-
-          subscriber.lastSignUpAttempt = d;
-          await subscriber.save();
-
-          await Verification.create({
-            ...t,
-            subscriber: subscriber._id
-          });
+        await Verifications.create({
+          ...t,
+          subscriber: s._id
+        });
+      } else if (!subscriber.isVerified) {
+        const d = new Date(subscriber.lastSignUpAttempt);
+        d.setMinutes(d.getMinutes() + 5);
+        if (d > new Date()) {
+          return next(new BadRequest("You need to wait at least 5 minutes between sign up attempts"));
         }
 
-        if (!subscriber || !subscriber.isVerified) {
-          const template = dappConfig.template(dappId, "sign-up");
-          mailer.send(dappConfig.getEmailTemplate(dappId, template), dappConfig.config(dappId).from, {
-            email,
-            token: t.token
-          });
-        }
-      } catch (err) {
-        // TODO: add global error handler
-        return res.status(400).send(err.message);
+        subscriber.lastSignUpAttempt = d;
+        await subscriber.save();
+
+        await Verifications.create({
+          ...t,
+          subscriber: subscriber._id
+        });
+      }
+
+      if (!subscriber || !subscriber.isVerified) {
+        const template = dappConfig.template(dappId, "sign-up");
+        mailer.send(dappConfig.getEmailTemplate(dappId, template), dappConfig.config(dappId).from, {
+          email,
+          token: t.token
+        });
       }
 
       return res.status(200).send("OK");
@@ -87,28 +83,23 @@ class Controller {
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(404).json({ errors: errors.array() });
+        return next(new BadRequest(errors.array()));
       }
 
       if (!dappConfig.isDapp(dappId)) {
-        return res.status(404).send("Invalid dapp");
+        return next(new BadRequest("DApp not found"));
       }
 
       if (!isSignatureValid(address, dappId, signature)) {
-        return res.status(404).send("Invalid signature");
+        return next(new BadRequest("Invalid signature"));
       }
 
       // TODO: handle unsubscribe to particular events
 
-      try {
-        await Subscribers.deleteOne({
-          dappId,
-          address
-        });
-      } catch (err) {
-        // TODO: add global error handler
-        return res.status(400).send(err.message);
-      }
+      await Subscribers.deleteOne({
+        dappId,
+        address
+      });
 
       return res.status(200).send("OK");
     };
@@ -122,7 +113,7 @@ class Controller {
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(404).json({ errors: errors.array() });
+        return next(new BadRequest(errors.array()));
       }
 
       const verification = await Verifications.findOne({
@@ -131,7 +122,7 @@ class Controller {
 
       if (verification) {
         if (verification.expirationTime < new Date()) {
-          return res.status(400).send("Verification token already expired");
+          return next(new BadRequest("Verification token already expired"));
         }
 
         if (!verification.subscriber.isVerified) {
@@ -143,7 +134,7 @@ class Controller {
           subscriber: verification.subscriber._id
         });
       } else {
-        return res.status(400).send("Invalid verification token");
+        return next(new BadRequest("Invalid verification token"));
       }
 
       return res.status(200).send("OK");
@@ -158,7 +149,7 @@ class Controller {
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(404).json({ errors: errors.array() });
+        return next(new BadRequest(errors.array()));
       }
 
       const subscriber = await Subscribers.findOne({
