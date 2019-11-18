@@ -18,8 +18,7 @@ eth.init();
 
 events.on("db:connected", () => {
   events.on("web3:connected", () => {
-    const blockNum =
-      process.argv.length >= 3 ? parseInt(process.argv[2], 10) : 0;
+    const blockNum = process.argv.length >= 3 ? parseInt(process.argv[2], 10) : 0;
 
     dappConfig.getDapps().forEach(dappId => {
       const contracts = dappConfig.contracts(dappId);
@@ -33,17 +32,24 @@ events.on("db:connected", () => {
 events.on("web3:event", ({ dappId, address, event, returnValues }) => {
   dappConfig.eventConfig(dappId, address, event).forEach(async eventConfig => {
     const users = await Subscribers.findVerifiedUsersByDapp(dappId);
-    users.forEach(user => {
+    users.forEach(async user => {
       if (addressCompare(returnValues[eventConfig.index], user.address)) {
         console.log("Sending email...");
-        mailer.send(
-          dappConfig.getEmailTemplate(dappId, eventConfig.template),
-          dappConfig.config(dappId).from,
-          {
-            email: user.email,
-            ...returnValues
+
+        let data = {
+          email: user.email,
+          ...returnValues
+        };
+
+        if (eventConfig.template.data) {
+          try {
+            data = Object.assign(data, await eventConfig.template.data(eth.web3, returnValues));
+          } catch (err) {
+            console.err("Error using data function", err);
           }
-        );
+        }
+
+        mailer.send(dappConfig.getEmailTemplate(dappId, eventConfig.template), dappConfig.config(dappId).from, data);
       }
     });
   });

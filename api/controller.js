@@ -78,7 +78,6 @@ class Controller {
 
   static unsubscribe(dappConfig) {
     return async (req, res) => {
-      // TODO:
       const {
         params: { dappId },
         body: { address, signature }

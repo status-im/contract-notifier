@@ -1,3 +1,32 @@
+
+const ERC20_ABI = [
+  {
+    constant: true,
+    inputs: [],
+    name: "name",
+    outputs: [
+      {
+        name: "",
+        type: "string"
+      }
+    ],
+    payable: false,
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    constant: true,
+    type: "function",
+    name: "balanceOf",
+    inputs: [
+      { name: "owner", type: "address" }
+    ],
+    outputs: [{ name: "balance", type: "uint256" }],
+    stateMutability: "view"
+  },
+];
+
+
 module.exports = {
   from: {
     email: "noreply@teller.exchange",
@@ -27,7 +56,15 @@ module.exports = {
             template: {
               subject: "New trade!",
               html: "escrow-creation.html",
-              text: "escrow-creation.txt"
+              text: "escrow-creation.txt",
+              data: async (web3, returnValues) => {
+                // Example obtaining contract data
+                const SNT = new web3.eth.Contract(ERC20_ABI, "0x3C36db79598e7902b5D726af7C7d406d5Da8aF14");
+                return {
+                  'tokenName': await SNT.methods.name().call(),
+                  'balance': await SNT.methods.balanceOf(returnValues.seller).call()
+                };
+              }
             }
           },
           "escrow-funded": {
