@@ -67,13 +67,18 @@ class Controller {
 
         if (!subscriber || !subscriber.isVerified) {
           const template = dappConfig.template(dappId, "sign-up");
-          mailer.send(dappConfig.getEmailTemplate(dappId, template), dappConfig.config(dappId).from, {
-            email,
-            token: t.token
-          });
+          try {
+            await mailer.send(dappConfig.getEmailTemplate(dappId, template), dappConfig.config(dappId).from, {
+              email,
+              token: t.token
+            });
+            session.commitTransaction();
+          } catch (err) {
+            session.abortTransaction();
+          }
+        } else {
+          session.commitTransaction();
         }
-
-        session.commitTransaction();
       } catch (err) {
         return next(err);
       }

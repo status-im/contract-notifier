@@ -12,10 +12,9 @@ const DappConfig = require("../config/dapps");
 const Controller = require("./controller");
 const logger = require("../logger")('api');
 
-
 const events = new Events();
 const dappConfig = new DappConfig();
-const mailer = new Mailer(config);
+const mailer = new Mailer(config, logger);
 const db = new Database(events, config);
 
 db.init(logger);
