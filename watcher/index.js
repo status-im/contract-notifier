@@ -39,7 +39,9 @@ events.on("web3:event", ({ dappId, address, event, returnValues }) => {
   dappConfig.eventConfig(dappId, address, event).forEach(async eventConfig => {
     const users = await Subscribers.findVerifiedUsersByDapp(dappId);
     users.forEach(async user => {
-      if (addressCompare(returnValues[eventConfig.index], user.address)) {
+      if ((typeof eventConfig.index === "function" && eventConfig.index(returnValues, user.address)) || addressCompare(returnValues[eventConfig.index], user.address)) {
+        if(eventConfig.filter && !eventConfig.filter(returnValues)) return;
+
         logger.info("Sending email...");
 
         let data = {
