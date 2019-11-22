@@ -100,6 +100,23 @@ module.exports = {
               html: "escrow-paid.html",
               text: "escrow-paid.txt"
             }
+          },
+          "dispute-release-buyer": { // Dispute won by the buyer
+            ABI: {
+              name: "Released",
+              type: "event",
+              inputs: [
+                { indexed: true, name: "escrowId", type: "uint256" },
+                { indexed: true, name: "seller", type: "address" }
+              ]
+            },
+            index: "buyer", // (returnValues, currentUser) => return true; If we want to use an indexer based on functions
+            filter: (returnValues) => returnValues.isDispute === true,
+            template: {
+              subject: "You won the dispute!",
+              html: "dispute-release-buyer.html",
+              text: "dispute-release-buyer.txt"
+            }
           }
         }
       }
