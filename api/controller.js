@@ -87,7 +87,7 @@ class Controller {
   }
 
   static unsubscribe(dappConfig) {
-    return async (req, res) => {
+    return async (req, res, next) => {
       const {
         params: { dappId },
         body: { address, signature }
@@ -122,7 +122,7 @@ class Controller {
   }
 
   static confirm() {
-    return async (req, res) => {
+    return async (req, res, next) => {
       const {
         params: { token }
       } = req;
@@ -168,7 +168,7 @@ class Controller {
   }
 
   static userExists() {
-    return async (req, res) => {
+    return async (req, res, next) => {
       const {
         params: { dappId, address }
       } = req;
