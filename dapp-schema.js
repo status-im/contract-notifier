@@ -16,8 +16,7 @@ module.exports = Joi.object({
     }),
     contracts: Joi.object().pattern(
       Joi.string().pattern(/^0x[0-9A-Za-z]{40}$/),
-      Joi.object({
-        events: Joi.object().pattern(
+      Joi.object().pattern(
           Joi.string(),
           Joi.object({
             ABI: Joi.object({
@@ -45,7 +44,7 @@ module.exports = Joi.object({
               .optional()
           })
         )
-      })
+      
     )
   })
 });

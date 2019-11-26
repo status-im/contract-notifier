@@ -26,7 +26,15 @@ class DAppConfig {
       const result = dappSchema.validate(dappConfig);
       if (result.error) exitError(result.error);
 
-      // TODO: validate templates exists
+      // TODO: improve this
+      if(!fs.existsSync(`./dapps/${dapp}/${dappConfig.templates['sign-up'].html}`)) exitError(`Template ./dapps/${dapp}/${dappConfig.templates['sign-up'].html} does not exist`);
+      if(!fs.existsSync(`./dapps/${dapp}/${dappConfig.templates['sign-up'].text}`)) exitError(`Template ./dapps/${dapp}/${dappConfig.templates['sign-up'].text} does not exist`);
+      Object.keys(dappConfig.templates.contracts).forEach(contract => {
+        Object.values(dappConfig.templates.contracts[contract]).forEach(event => {
+          if(!fs.existsSync(`./dapps/${dapp}/${event.template.text}`)) exitError(`Template ./dapps/${dapp}/${event.template.text} does not exist`);
+          if(!fs.existsSync(`./dapps/${dapp}/${event.template.html}`)) exitError(`Template ./dapps/${dapp}/${event.template.html} does not exist`);
+        });
+      });
     });
   }
 
@@ -55,7 +63,7 @@ class DAppConfig {
 
   ABI(dappId, contract) {
     const dappConfig = this.config(dappId);
-    const ABI = Object.values(dappConfig.templates.contracts[contract].events)
+    const ABI = Object.values(dappConfig.templates.contracts[contract])
       .map(x => x.ABI)
       .reduce((accum, curr) => {
         if (accum.find(x => x.name === curr.name)) return accum;
@@ -71,7 +79,7 @@ class DAppConfig {
 
   eventConfig(dappId, contract, eventName) {
     const dappConfig = this.config(dappId);
-    return Object.values(dappConfig.templates.contracts[contract].events).filter(
+    return Object.values(dappConfig.templates.contracts[contract]).filter(
       x => x.ABI.name === eventName && x.ABI.type === "event"
     );
   }
