@@ -1,6 +1,6 @@
 const path = require("path");
 const fs = require("fs");
-const Joi = require("@hapi/joi");
+const dappSchema = require('./dapp-schema');
 
 class DAppConfig {
   constructor(config, logger) {
@@ -23,57 +23,7 @@ class DAppConfig {
 
       const dappConfig = require(`./dapps/${dapp}/config.js`);
       
-      const schema = Joi.object({
-        from: [
-          Joi.object({
-            name: Joi.string(),
-            email: Joi.string().email()
-          }),
-          Joi.string().email()
-        ],
-        templates: Joi.object({
-          "sign-up": Joi.object({
-            subject: Joi.string(),
-            html: Joi.string(),
-            text: Joi.string()
-          }),
-          contracts: Joi.object().pattern(
-            Joi.string().pattern(/^0x[0-9A-Za-z]{40}$/),
-            Joi.object({
-              events: Joi.object().pattern(
-                Joi.string(),
-                Joi.object({
-                  ABI: Joi.object({
-                    name: Joi.string(),
-                    type: Joi.string().pattern(/^event$/),
-                    inputs: Joi.array().items(
-                      Joi.object({
-                        indexed: Joi.bool(),
-                        name: Joi.string(),
-                        type: Joi.string()
-                      })
-                    )
-                  }).unknown(),
-                  index: [Joi.string(), Joi.func().arity(3)],
-                  template: Joi.object({
-                    subject: Joi.string(),
-                    html: Joi.string(),
-                    text: Joi.string(),
-                    data: Joi.func()
-                      .arity(2)
-                      .optional()
-                  }),
-                  filter: Joi.func()
-                    .arity(2)
-                    .optional()
-                })
-              )
-            })
-          )
-        })
-      });
-
-      const result = schema.validate(dappConfig);
+      const result = dappSchema.validate(dappConfig);
       if (result.error) exitError(result.error);
 
       // TODO: validate templates exists
