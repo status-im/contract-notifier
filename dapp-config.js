@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const dappSchema = require('./dapp-schema');
+const fm = require('front-matter');
 
 class DAppConfig {
   constructor(config, logger) {
@@ -27,8 +28,8 @@ class DAppConfig {
       if (result.error) exitError(result.error);
 
       // TODO: improve this
-      if(!fs.existsSync(`./dapps/${dapp}/${dappConfig.templates['sign-up'].html}`)) exitError(`Template ./dapps/${dapp}/${dappConfig.templates['sign-up'].html} does not exist`);
-      if(!fs.existsSync(`./dapps/${dapp}/${dappConfig.templates['sign-up'].text}`)) exitError(`Template ./dapps/${dapp}/${dappConfig.templates['sign-up'].text} does not exist`);
+      if(!fs.existsSync(`./dapps/${dapp}/${dappConfig.templates.subscribe}`)) exitError(`Template ./dapps/${dapp}/${dappConfig.templates.subscribe} does not exist`);
+      
       Object.keys(dappConfig.templates.contracts).forEach(contract => {
         Object.values(dappConfig.templates.contracts[contract]).forEach(event => {
           if(!fs.existsSync(`./dapps/${dapp}/${event.template.text}`)) exitError(`Template ./dapps/${dapp}/${event.template.text} does not exist`);
@@ -85,13 +86,12 @@ class DAppConfig {
   }
 
   getEmailTemplate(dappId, template) {
-    const templatePath = path.join("./dapps", dappId);
-    const subject = template.subject;
-
-    // TODO: avoid reading this on each user/email
-    const text = fs.readFileSync(path.join(templatePath, template.text)).toString();
-    const html = fs.readFileSync(path.join(templatePath, template.html)).toString();
-    return { text, html, subject };
+    const file = fs.readFileSync(path.join("./dapps", dappId, template)).toString();
+    const content = fm(file);
+    const subject = content.attributes.subject || template;
+    const body = content.body;
+    const html = content.attributes.html ? !!content.attributes.html : true;
+    return { subject, body, html };
   }
 }
 

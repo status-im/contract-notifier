@@ -66,7 +66,7 @@ class Controller {
         }
 
         if (!subscriber || !subscriber.isVerified) {
-          const template = dappConfig.template(dappId, "sign-up");
+          const template = dappConfig.template(dappId, "subscribe");
           try {
             await mailer.send(dappConfig.getEmailTemplate(dappId, template), dappConfig.config(dappId).from, {
               email,

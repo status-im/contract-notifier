@@ -29,11 +29,7 @@ module.exports = {
     name: "Teller Network"
   },
   templates: {
-    "sign-up": {
-      subject: "Signup email",
-      html: "sign-up.html",
-      text: "sign-up.txt"
-    },
+    subscribe: "sign-up.md",
     contracts: {
       "0xFCC8175384c199C3Bc7a43c3583CbdcEf74ceC24": {
         "escrow-creation": {

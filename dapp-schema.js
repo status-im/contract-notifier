@@ -9,11 +9,7 @@ module.exports = Joi.object({
     Joi.string().email()
   ],
   templates: Joi.object({
-    "sign-up": Joi.object({
-      subject: Joi.string(),
-      html: Joi.string(),
-      text: Joi.string()
-    }),
+    subscribe: Joi.string(),
     contracts: Joi.object().pattern(
       Joi.string().pattern(/^0x[0-9A-Za-z]{40}$/),
       Joi.object().pattern(

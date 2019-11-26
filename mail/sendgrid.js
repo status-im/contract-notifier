@@ -1,5 +1,7 @@
 const sgMail = require("@sendgrid/mail");
 const Handlebars = require("handlebars");
+const { markdownToTxt } = require('markdown-to-txt');
+const marked = require('marked');
 
 class SendGridMailer {
   constructor(config, logger) {
@@ -10,16 +12,18 @@ class SendGridMailer {
   send(template, from, data) {
     const logger = this.logger;
     return new Promise((resolve, reject) => {
-      const tplText = Handlebars.compile(template.text);
-      const tplHtml = Handlebars.compile(template.html);
-
+      const body = Handlebars.compile(template.body)(data);
+    
       const msg = {
         to: data.email,
         from,
-        ...template,
-        text: tplText(data),
-        html: tplHtml(data)
-      };
+        subject: template.subject,
+        text: markdownToTxt(body)
+      }
+
+      if(template.html){
+        msg.html = marked(body);
+      }
 
       sgMail.send(msg, (error, result) => {
         if (error) {
