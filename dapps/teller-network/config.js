@@ -110,8 +110,8 @@ module.exports = {
                 { indexed: true, name: "seller", type: "address" }
               ]
             },
-            index: "buyer", // (returnValues, currentUser) => return true; If we want to use an indexer based on functions
-            filter: (returnValues) => returnValues.isDispute === true,
+            index: "buyer",// (web3, returnValues, currentUser) => return true; If we want to use an indexer based on functions
+            filter: async (web3, returnValues) => returnValues.isDispute === true,
             template: {
               subject: "You won the dispute!",
               html: "dispute-release-buyer.html",

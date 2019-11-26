@@ -9,7 +9,7 @@ const Subscribers = require("../models/subscribers");
 const logger = require("../logger")('watcher');
 
 const events = new Events();
-const dappConfig = new DappConfig(config);
+const dappConfig = new DappConfig(config, logger);
 const mailer = new Mailer(config);
 const db = new Database(events, config);
 const eth = new Ethereum(events, config);
@@ -39,8 +39,8 @@ events.on("web3:event", ({ dappId, address, event, returnValues }) => {
   dappConfig.eventConfig(dappId, address, event).forEach(async eventConfig => {
     const users = await Subscribers.findVerifiedUsersByDapp(dappId);
     users.forEach(async user => {
-      if ((typeof eventConfig.index === "function" && eventConfig.index(returnValues, user.address)) || addressCompare(returnValues[eventConfig.index], user.address)) {
-        if(eventConfig.filter && !eventConfig.filter(returnValues)) return;
+      if ((typeof eventConfig.index === "function" && eventConfig.index(eth.web3, returnValues, user.address)) || addressCompare(returnValues[eventConfig.index], user.address)) {
+        if(eventConfig.filter && await !eventConfig.filter(eth.web3, returnValues)) return;
 
         logger.info("Sending email...");
 
