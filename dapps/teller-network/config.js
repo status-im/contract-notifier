@@ -44,18 +44,14 @@ module.exports = {
             ]
           },
           index: "seller",
-          template: {
-            subject: "New trade!",
-            html: "escrow-creation.html",
-            text: "escrow-creation.txt",
-            data: async (web3, returnValues) => {
-              // Example obtaining contract data
-              const SNT = new web3.eth.Contract(ERC20_ABI, "0x3C36db79598e7902b5D726af7C7d406d5Da8aF14");
-              return {
-                tokenName: await SNT.methods.name().call(),
-                balance: await SNT.methods.balanceOf(returnValues.seller).call()
-              };
-            }
+          template: "escrow-creation.md",
+          data: async (web3, returnValues) => {
+            // Example obtaining contract data
+            const SNT = new web3.eth.Contract(ERC20_ABI, "0x3C36db79598e7902b5D726af7C7d406d5Da8aF14");
+            return {
+              tokenName: await SNT.methods.name().call(),
+              balance: await SNT.methods.balanceOf(returnValues.seller).call()
+            };
           }
         },
         "escrow-funded": {
@@ -70,11 +66,7 @@ module.exports = {
             ]
           },
           index: "buyer",
-          template: {
-            subject: "Your escrow has been funded!",
-            html: "escrow-funded.html",
-            text: "escrow-funded.txt"
-          }
+          template: "escrow-funded.md"
         },
         "escrow-paid": {
           ABI: {
@@ -86,11 +78,7 @@ module.exports = {
             ]
           },
           index: "seller",
-          template: {
-            subject: "Your escrow has been paid!",
-            html: "escrow-paid.html",
-            text: "escrow-paid.txt"
-          }
+          template: "escrow-paid.md"
         },
         "dispute-release-buyer": {
           // Dispute won by the buyer
@@ -104,11 +92,7 @@ module.exports = {
           },
           index: "buyer", // (web3, returnValues, currentUser) => return true; If we want to use an indexer based on functions
           filter: async (web3, returnValues) => returnValues.isDispute === true,
-          template: {
-            subject: "You won the dispute!",
-            html: "dispute-release-buyer.html",
-            text: "dispute-release-buyer.txt"
-          }
+          template: "dispute-release-buyer.md"
         }
       }
     }

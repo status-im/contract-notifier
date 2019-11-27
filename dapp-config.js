@@ -32,8 +32,7 @@ class DAppConfig {
       
       Object.keys(dappConfig.templates.contracts).forEach(contract => {
         Object.values(dappConfig.templates.contracts[contract]).forEach(event => {
-          if(!fs.existsSync(`./dapps/${dapp}/${event.template.text}`)) exitError(`Template ./dapps/${dapp}/${event.template.text} does not exist`);
-          if(!fs.existsSync(`./dapps/${dapp}/${event.template.html}`)) exitError(`Template ./dapps/${dapp}/${event.template.html} does not exist`);
+          if(!fs.existsSync(`./dapps/${dapp}/${event.template}`)) exitError(`Template ./dapps/${dapp}/${event.template} does not exist`);
         });
       });
     });
