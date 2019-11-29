@@ -7,7 +7,7 @@ const BadRequest = require("./bad-request");
 class Controller {
   static subscribe(dappConfig, mailer) {
     return async (req, res, next) => {
-      const {
+      let {
         params: { dappId },
         body: { address, email, signature }
       } = req;
@@ -26,6 +26,8 @@ class Controller {
       }
 
       // TODO: handle subscriptions to particular events
+
+      address = address.toLowerCase();
 
       try {
         const session = await Subscribers.startSession();
@@ -88,7 +90,7 @@ class Controller {
 
   static unsubscribe(dappConfig) {
     return async (req, res, next) => {
-      const {
+      let {
         params: { dappId },
         body: { address, signature }
       } = req;
@@ -107,6 +109,8 @@ class Controller {
       }
 
       // TODO: handle unsubscribe to particular events
+
+      address = address.toLowerCase();
 
       try {
         await Subscribers.deleteOne({
@@ -169,7 +173,7 @@ class Controller {
 
   static userExists() {
     return async (req, res, next) => {
-      const {
+      let {
         params: { dappId, address }
       } = req;
 
@@ -177,6 +181,8 @@ class Controller {
       if (!errors.isEmpty()) {
         return next(new BadRequest(errors.array()));
       }
+
+      address = address.toLowerCase();
 
       try {
         const subscriber = await Subscribers.findOne({

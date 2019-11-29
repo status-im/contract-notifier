@@ -63,6 +63,3 @@ events.on("web3:event", ({ dappId, address, event, returnValues }) => {
   });
 });
 
-// TODO: handle errors sending email
-// TODO: handle web3js disconnects
-// TODO: support templates
