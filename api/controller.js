@@ -59,6 +59,8 @@ class Controller {
           }
 
           subscriber.lastSignUpAttempt = d;
+          subscriber.email = email;
+          
           await subscriber.save();
 
           await Verifications.create({
