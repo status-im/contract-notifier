@@ -1,7 +1,4 @@
 ---
-subject: New trade!
+subject: New trade request
 ---
-A buyer is interested in your offer
-EscrowId:{{escrowId}}
-Buyer Address: {{buyer}}
-OfferId: {{offerId}}
+Someone opened a trade with you. Open teller to proceed the [trade](https://status-im.github.io/status-teller-network/build/#/escrow/{{escrowId}})

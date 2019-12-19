@@ -26,7 +26,7 @@ const ERC20_ABI = [
 module.exports = {
   from: {
     email: "noreply@teller.exchange",
-    name: "Teller Network"
+    name: "Teller"
   },
   templates: {
     subscribe: "sign-up.md",
@@ -79,6 +79,19 @@ module.exports = {
           },
           index: "seller",
           template: "escrow-paid.md"
+        },
+        "escrow-released": {
+          ABI: {
+            name: "Released",
+            type: "event",
+            inputs: [
+              { indexed: true, name: "escrowId", type: "uint256" },
+              { indexed: true, name: "seller", type: "address" }
+            ]
+          },
+          index: "buyer",
+          filter: async (web3, returnValues) => !returnValues.isDispute,
+          template: "escrow-released.md"
         },
         "dispute-release-buyer": {
           // Dispute won by the buyer

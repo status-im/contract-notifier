@@ -1,5 +1,4 @@
 ---
-subject: Escrow funded!
+subject: Escrow funded
 ---
-### Your trade has been funded.
-Proceed to make the payment.
+[Escrow](https://status-im.github.io/status-teller-network/build/#/escrow/{{escrowId}}) was successfully funded by seller. Open teller to proceed the trade.
