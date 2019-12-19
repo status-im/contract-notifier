@@ -1,5 +1,5 @@
 ---
 subject: Sign up email
 ---
-### Welcome to teller network!
-Verify your email at http://localhost:3000/#/verify-email/{{ token }}
+### Welcome to Teller.Exchange!
+Verify your email at https://status-im.github.io/status-teller-network/#/verify-email/{{ token }}
