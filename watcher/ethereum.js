@@ -12,7 +12,16 @@ class Ethereum {
   init(logger) {
     this.logger = logger;
 
-    this.web3 = new Web3(this.config.BLOCKCHAIN_CONNECTION_POINT);
+    const provider = new Web3.providers.WebsocketProvider(this.config.BLOCKCHAIN_CONNECTION_POINT);
+    this.web3 = new Web3(provider);
+
+    const wsExitOnError = e => {
+      logger.error("web3 - WS Disconnect", e);
+      process.exit(1);
+    }
+
+    provider.on('error', wsExitOnError);
+    provider.on('end', ewsExitOnError);
 
     this.web3.eth.net
       .isListening()
@@ -21,7 +30,6 @@ class Ethereum {
         this.events.emit("web3:connected");
       })
       .catch(error => {
-        console.log(error);
         logger.error("web3 - ", error);
         process.exit(1);
       });
