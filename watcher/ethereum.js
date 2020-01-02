@@ -21,7 +21,7 @@ class Ethereum {
     }
 
     provider.on('error', wsExitOnError);
-    provider.on('end', ewsExitOnError);
+    provider.on('end', wsExitOnError);
 
     this.web3.eth.net
       .isListening()
