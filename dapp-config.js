@@ -95,7 +95,7 @@ class DAppConfig {
 
   getVariables(dappId, extraData) {
     const dappConfig = this.config(dappId);
-    return Object.assign(dappConfig.variables || {}, extraData);
+    return Object.assign(dappConfig.templates.variables || {}, extraData);
   }
 }
 
