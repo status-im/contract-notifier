@@ -30,6 +30,9 @@ module.exports = {
   },
   templates: {
     subscribe: "sign-up.md",
+    variables: {
+      url: "https://status-im.github.io/status-teller-network/build"
+    },
     contracts: {
       "0xFCC8175384c199C3Bc7a43c3583CbdcEf74ceC24": {
         "escrow-creation": {

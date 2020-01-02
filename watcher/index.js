@@ -44,10 +44,10 @@ events.on("web3:event", ({ dappId, address, event, returnValues }) => {
 
         logger.info("Sending email...");
 
-        let data = {
+        let data = dappConfig.getVariables(dappId, {
           email: user.email,
           ...returnValues
-        };
+        });
 
         if (eventConfig.template.data) {
           try {

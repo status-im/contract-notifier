@@ -92,6 +92,11 @@ class DAppConfig {
     const html = content.attributes.html ? !!content.attributes.html : true;
     return { subject, body, html };
   }
+
+  getVariables(dappId, extraData) {
+    const dappConfig = this.config(dappId);
+    return Object.assign(dappConfig.variables || {}, extraData);
+  }
 }
 
 module.exports = DAppConfig;
