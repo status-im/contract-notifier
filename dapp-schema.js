@@ -10,6 +10,7 @@ module.exports = Joi.object({
   ],
   templates: Joi.object({
     subscribe: Joi.string(),
+    variables: Joi.object().optional(),
     contracts: Joi.object().pattern(
       Joi.string().pattern(/^0x[0-9A-Za-z]{40}$/),
       Joi.object().pattern(
