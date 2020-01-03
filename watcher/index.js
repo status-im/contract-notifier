@@ -40,7 +40,11 @@ events.on("web3:event", ({ dappId, address, event, returnValues }) => {
     const users = await Subscribers.findVerifiedUsersByDapp(dappId);
     users.forEach(async user => {
       if ((typeof eventConfig.index === "function" && eventConfig.index(eth.web3, returnValues, user.address)) || addressCompare(returnValues[eventConfig.index], user.address)) {
-        if(eventConfig.filter && await !eventConfig.filter(eth.web3, returnValues)) return;
+        
+        if(eventConfig.filter){
+          const isValid = await eventConfig.filter(eth.web3, returnValues);
+          if(!isValid) return;
+        }
 
         logger.info("Sending email...");
 

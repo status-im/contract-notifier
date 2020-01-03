@@ -92,14 +92,13 @@ module.exports = {
               { indexed: true, name: "escrowId", type: "uint256" },
               { indexed: true, name: "seller", type: "address" },
               { indexed: true, name: "buyer", type: "address" },
-              { indexed: true, name: "isDispute", type: "bool" },
+              { indexed: false, name: "isDispute", type: "bool" },
             ]
           },
           index: "buyer",
           filter: async (web3, returnValues) => !returnValues.isDispute,
           template: "escrow-released.md"
-        }
-        /*,
+        },
         "dispute-release-buyer": {
           // Dispute won by the buyer
           ABI: {
@@ -107,13 +106,15 @@ module.exports = {
             type: "event",
             inputs: [
               { indexed: true, name: "escrowId", type: "uint256" },
-              { indexed: true, name: "seller", type: "address" }
+              { indexed: true, name: "seller", type: "address" },
+              { indexed: true, name: "buyer", type: "address" },
+              { indexed: false, name: "isDispute", type: "bool" },
             ]
           },
           index: "buyer", // (web3, returnValues, currentUser) => return true; If we want to use an indexer based on functions
-          filter: async (web3, returnValues) => returnValues.isDispute === true,
+          filter: async (web3, returnValues) => returnValues.isDispute,
           template: "dispute-release-buyer.md"
-        }*/
+        }
       }
     }
   }
