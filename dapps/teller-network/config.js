@@ -1,30 +1,5 @@
 const { addressCompare } = require("../../watcher/utils");
 
-const ERC20_ABI = [
-  {
-    constant: true,
-    inputs: [],
-    name: "name",
-    outputs: [
-      {
-        name: "",
-        type: "string"
-      }
-    ],
-    payable: false,
-    stateMutability: "view",
-    type: "function"
-  },
-  {
-    constant: true,
-    type: "function",
-    name: "balanceOf",
-    inputs: [{ name: "owner", type: "address" }],
-    outputs: [{ name: "balance", type: "uint256" }],
-    stateMutability: "view"
-  }
-];
-
 const ESCROW_ABI = [
   {
     constant: true,
@@ -68,9 +43,9 @@ const USERSTORE_ABI = [
   }
 ];
 
-const ArbitratorLicenseProxy = "0x2724E1d8Ee34477956359B936d594e7FcF749900";
-const UserStoreProxy = "0x0c4FEf12407A763936827E52cFa06c495Bf24FBe";
-const EscrowProxy = "0x3305A8797F34D5d92093c8Ea55686314141cC4F2";
+const ArbitratorLicenseProxy = "0x3e7fc31b9bd5FaFdE828AcC1FD7b7b3dD7c1D927";
+const UserStoreProxy = "0x61FBACebCEf64e726fF5B848dA5DFF0c44c199f5";
+const EscrowProxy = "0xD5baC31a10b8938dd47326f01802fa23f1032AeE";
 
 const getArbitratorName = async (web3, returnValues) => {
   const UserStore = new web3.eth.Contract(USERSTORE_ABI, UserStoreProxy);
