@@ -39,7 +39,7 @@ events.on("web3:event", ({ dappId, address, event, returnValues }) => {
   dappConfig.eventConfig(dappId, address, event).forEach(async eventConfig => {
     const users = await Subscribers.findVerifiedUsersByDapp(dappId);
     users.forEach(async user => {
-      if ((typeof eventConfig.index === "function" && eventConfig.index(eth.web3, returnValues, user.address)) || addressCompare(returnValues[eventConfig.index], user.address)) {
+      if ((typeof eventConfig.index === "function" && (await eventConfig.index(eth.web3, returnValues, user.address))) || addressCompare(returnValues[eventConfig.index], user.address)) {
         
         if(eventConfig.filter){
           const isValid = await eventConfig.filter(eth.web3, returnValues);
@@ -53,9 +53,9 @@ events.on("web3:event", ({ dappId, address, event, returnValues }) => {
           ...returnValues
         });
 
-        if (eventConfig.template.data) {
+        if (eventConfig.data) {
           try {
-            data = Object.assign(data, await eventConfig.template.data(eth.web3, returnValues));
+            data = Object.assign(data, await eventConfig.data(eth.web3, returnValues));
           } catch (err) {
             logger.log("error", "Error using data function: ", err);
           }

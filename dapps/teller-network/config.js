@@ -1,3 +1,5 @@
+const { addressCompare } = require("../../watcher/utils");
+
 const ERC20_ABI = [
   {
     constant: true,
@@ -23,6 +25,71 @@ const ERC20_ABI = [
   }
 ];
 
+const ESCROW_ABI = [
+  {
+    constant: true,
+    inputs: [{ name: "", type: "uint256" }],
+    name: "transactions",
+    outputs: [
+      { name: "offerId", type: "uint256" },
+      { name: "token", type: "address" },
+      { name: "tokenAmount", type: "uint256" },
+      { name: "expirationTime", type: "uint256" },
+      { name: "sellerRating", type: "uint256" },
+      { name: "buyerRating", type: "uint256" },
+      { name: "fiatAmount", type: "uint256" },
+      { name: "buyer", type: "address" },
+      { name: "seller", type: "address" },
+      { name: "arbitrator", type: "address" },
+      { name: "destination", type: "address" },
+      { name: "status", type: "uint8" }
+    ],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+    signature: "0x9ace38c2"
+  }
+];
+
+const USERSTORE_ABI = [
+  {
+    constant: true,
+    inputs: [{ name: "", type: "address" }],
+    name: "users",
+    outputs: [
+      { name: "contactData", type: "string" },
+      { name: "location", type: "string" },
+      { name: "username", type: "string" }
+    ],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+    signature: "0xa87430ba"
+  }
+];
+
+const ArbitratorLicenseProxy = "0x2724E1d8Ee34477956359B936d594e7FcF749900";
+const UserStoreProxy = "0x0c4FEf12407A763936827E52cFa06c495Bf24FBe";
+const EscrowProxy = "0x3305A8797F34D5d92093c8Ea55686314141cC4F2";
+
+const getArbitratorName = async (web3, returnValues) => {
+  const UserStore = new web3.eth.Contract(USERSTORE_ABI, UserStoreProxy);
+  let arbitratorName = returnValues.arbitrator;
+  try {
+    const userData = await UserStore.methods.users(returnValues.arbitrator).call();
+    arbitratorName = userData.username;
+  } catch (e) {
+    console.log(e);
+  }
+  return { arbitratorName };
+};
+
+const isParticipant = participant => async (web3, returnValues, userAddress) => {
+  const EscrowContract = new web3.eth.Contract(ESCROW_ABI, EscrowProxy);
+  const escrow = await EscrowContract.methods.transactions(returnValues.escrowId).call();
+  return addressCompare(escrow[participant], userAddress);
+};
+
 module.exports = {
   from: {
     email: "noreply@teller.exchange",
@@ -34,7 +101,7 @@ module.exports = {
       url: "https://status-im.github.io/status-teller-network/build"
     },
     contracts: {
-      "0x23a6F0bdBd6b5e6DBe5768F3aA68DDC3acF610d8": {
+      [EscrowProxy]: {
         "escrow-creation": {
           ABI: {
             name: "Created",
@@ -48,15 +115,6 @@ module.exports = {
           },
           index: "seller",
           template: "escrow-creation.md"
-          /*,
-          data: async (web3, returnValues) => {
-            // Example obtaining contract data
-            const SNT = new web3.eth.Contract(ERC20_ABI, "0x3C36db79598e7902b5D726af7C7d406d5Da8aF14");
-            return {
-              tokenName: await SNT.methods.name().call(),
-              balance: await SNT.methods.balanceOf(returnValues.seller).call()
-            };
-          }*/
         },
         "escrow-funded": {
           ABI: {
@@ -92,15 +150,14 @@ module.exports = {
               { indexed: true, name: "escrowId", type: "uint256" },
               { indexed: true, name: "seller", type: "address" },
               { indexed: true, name: "buyer", type: "address" },
-              { indexed: false, name: "isDispute", type: "bool" },
+              { indexed: false, name: "isDispute", type: "bool" }
             ]
           },
           index: "buyer",
           filter: async (web3, returnValues) => !returnValues.isDispute,
           template: "escrow-released.md"
         },
-        "dispute-release-buyer": {
-          // Dispute won by the buyer
+        "dispute-won-buyer": {
           ABI: {
             name: "Released",
             type: "event",
@@ -108,12 +165,166 @@ module.exports = {
               { indexed: true, name: "escrowId", type: "uint256" },
               { indexed: true, name: "seller", type: "address" },
               { indexed: true, name: "buyer", type: "address" },
-              { indexed: false, name: "isDispute", type: "bool" },
+              { indexed: false, name: "isDispute", type: "bool" }
             ]
           },
-          index: "buyer", // (web3, returnValues, currentUser) => return true; If we want to use an indexer based on functions
+          index: "buyer",
           filter: async (web3, returnValues) => returnValues.isDispute,
-          template: "dispute-release-buyer.md"
+          template: "dispute-won-buyer.md"
+        },
+        "dispute-won-seller": {
+          ABI: {
+            name: "Canceled",
+            type: "event",
+            inputs: [
+              { indexed: true, name: "escrowId", type: "uint256" },
+              { indexed: true, name: "seller", type: "address" },
+              { indexed: true, name: "buyer", type: "address" },
+              { indexed: false, name: "isDispute", type: "bool" }
+            ]
+          },
+          index: "seller",
+          filter: async (web3, returnValues) => returnValues.isDispute,
+          template: "dispute-won-seller.md"
+        },
+        "dispute-lost-buyer": {
+          ABI: {
+            name: "Canceled",
+            type: "event",
+            inputs: [
+              { indexed: true, name: "escrowId", type: "uint256" },
+              { indexed: true, name: "seller", type: "address" },
+              { indexed: true, name: "buyer", type: "address" },
+              { indexed: false, name: "isDispute", type: "bool" }
+            ]
+          },
+          index: "buyer",
+          filter: async (web3, returnValues) => returnValues.isDispute,
+          template: "dispute-lost-buyer.md"
+        },
+        "dispute-lost-seller": {
+          ABI: {
+            name: "Released",
+            type: "event",
+            inputs: [
+              { indexed: true, name: "escrowId", type: "uint256" },
+              { indexed: true, name: "seller", type: "address" },
+              { indexed: true, name: "buyer", type: "address" },
+              { indexed: false, name: "isDispute", type: "bool" }
+            ]
+          },
+          index: "seller",
+          filter: async (web3, returnValues) => returnValues.isDispute,
+          template: "dispute-lost-seller.md"
+        },
+        "escrow-canceled-buyer": {
+          ABI: {
+            name: "Canceled",
+            type: "event",
+            inputs: [
+              { indexed: true, name: "escrowId", type: "uint256" },
+              { indexed: true, name: "seller", type: "address" },
+              { indexed: true, name: "buyer", type: "address" },
+              { indexed: false, name: "isDispute", type: "bool" }
+            ]
+          },
+          index: "buyer",
+          filter: async (web3, returnValues) => !returnValues.isDispute,
+          template: "escrow-canceled-buyer.md"
+        },
+        "escrow-canceled-seller": {
+          ABI: {
+            name: "Canceled",
+            type: "event",
+            inputs: [
+              { indexed: true, name: "escrowId", type: "uint256" },
+              { indexed: true, name: "seller", type: "address" },
+              { indexed: true, name: "buyer", type: "address" },
+              { indexed: false, name: "isDispute", type: "bool" }
+            ]
+          },
+          index: "seller",
+          filter: async (web3, returnValues) => !returnValues.isDispute,
+          template: "escrow-canceled-seller.md"
+        },
+        "dispute-open-buyer": {
+          ABI: {
+            name: "ArbitrationRequired",
+            type: "event",
+            inputs: [
+              { indexed: false, name: "escrowId", type: "uint256" },
+              { indexed: false, name: "timeout", type: "uint256" }
+            ]
+          },
+          index: isParticipant("buyer"),
+          template: "dispute-open-buyer.md"
+        },
+        "dispute-open-seller": {
+          ABI: {
+            name: "ArbitrationRequired",
+            type: "event",
+            inputs: [
+              { indexed: false, name: "escrowId", type: "uint256" },
+              { indexed: false, name: "timeout", type: "uint256" }
+            ]
+          },
+          index: isParticipant("seller"),
+          template: "dispute-open-seller.md"
+        },
+        "dispute-open-arbitrator": {
+          ABI: {
+            name: "ArbitrationRequired",
+            type: "event",
+            inputs: [
+              { indexed: false, name: "escrowId", type: "uint256" },
+              { indexed: false, name: "timeout", type: "uint256" }
+            ]
+          },
+          index: isParticipant("arbitrator"),
+          template: "dispute-open-arbitrator.md"
+        }
+      },
+      [ArbitratorLicenseProxy]: {
+        "request-arbitrator": {
+          ABI: {
+            name: "ArbitratorRequested",
+            type: "event",
+            inputs: [
+              { indexed: false, name: "id", type: "bytes32" },
+              { indexed: true, name: "seller", type: "address" },
+              { indexed: true, name: "arbitrator", type: "address" }
+            ]
+          },
+          index: "arbitrator",
+          template: "request-arbitrator.md"
+        },
+        "seller-approved": {
+          ABI: {
+            name: "RequestAccepted",
+            type: "event",
+            inputs: [
+              { indexed: false, name: "id", type: "bytes32" },
+              { indexed: true, name: "arbitrator", type: "address" },
+              { indexed: true, name: "seller", type: "address" }
+            ]
+          },
+          index: "seller",
+          template: "seller-approved.md",
+          data: getArbitratorName
+        },
+        "seller-denied": {
+          ABI: {
+            name: "RequestRejected",
+            type: "event",
+            inputs: [
+              { indexed: false, name: "id", type: "bytes32" },
+              { indexed: true, name: "arbitrator", type: "address" },
+              { indexed: true, name: "seller", type: "address" }
+            ]
+          },
+          index: "seller",
+          template: "seller-denied.md",
+          data: getArbitratorName
         }
       }
     }
