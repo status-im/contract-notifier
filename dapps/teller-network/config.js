@@ -73,7 +73,7 @@ module.exports = {
   templates: {
     subscribe: "sign-up.md",
     variables: {
-      url: "https://status-im.github.io/status-teller-network/build"
+      url: "https://teller.exchange"
     },
     contracts: {
       [EscrowProxy]: {
