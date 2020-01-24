@@ -15,7 +15,7 @@ const getToken = () => {
   const expirationTime = new Date();
   expirationTime.setUTCHours(expirationTime.getUTCHours() + 2);
   return {
-    token: cryptoRandomString({ length: 100, type: "url-safe" }),
+    token: cryptoRandomString({ length: 100, type: "hex" }),
     expirationTime
   };
 };
