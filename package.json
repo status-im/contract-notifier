@@ -22,7 +22,7 @@
     "handlebars": "^4.5.2",
     "helmet": "^3.21.2",
     "markdown-to-txt": "^1.0.1",
-    "marked": "^0.7.0",
+    "marked": "^4.0.10",
     "mongoose": "5.7.5",
     "nodemon": "^1.19.4",
     "strip-hex-prefix": "^1.0.0",
